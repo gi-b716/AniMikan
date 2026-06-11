@@ -1,3 +1,5 @@
+import '../utils/validation.dart';
+
 enum CollectionType {
   wish(1),
   collect(2),
@@ -10,7 +12,7 @@ enum CollectionType {
 
   static CollectionType fromValue(int v) => CollectionType.values.firstWhere(
     (e) => e.value == v,
-    orElse: () => CollectionType.wish,
+    orElse: () => throw ArgumentError('Unknown CollectionType value: $v'),
   );
 
   String get label => switch (this) {
@@ -34,7 +36,7 @@ enum SubjectType {
 
   static SubjectType fromValue(int v) => SubjectType.values.firstWhere(
     (e) => e.value == v,
-    orElse: () => SubjectType.anime,
+    orElse: () => throw ArgumentError('Unknown SubjectType value: $v'),
   );
 
   String get label => switch (this) {
@@ -62,11 +64,11 @@ class SubjectImages {
   });
 
   factory SubjectImages.fromJson(Map<String, dynamic> json) => SubjectImages(
-    common: json['common'] as String? ?? '',
-    grid: json['grid'] as String? ?? '',
-    large: json['large'] as String? ?? '',
-    medium: json['medium'] as String? ?? '',
-    small: json['small'] as String? ?? '',
+    common: rStr(json, 'common'),
+    grid: rStr(json, 'grid'),
+    large: rStr(json, 'large'),
+    medium: rStr(json, 'medium'),
+    small: rStr(json, 'small'),
   );
 }
 
@@ -89,17 +91,13 @@ class SlimSubjectInterest {
 
   factory SlimSubjectInterest.fromJson(Map<String, dynamic> json) =>
       SlimSubjectInterest(
-        comment: json['comment'] as String? ?? '',
-        id: (json['id'] as num?)?.toInt() ?? 0,
-        rate: (json['rate'] as num?)?.toInt() ?? 0,
-        tags:
-            (json['tags'] as List<dynamic>?)
-                ?.map((e) => e as String)
-                .toList() ??
-            [],
-        type: CollectionType.fromValue((json['type'] as num?)?.toInt() ?? 1),
+        comment: rStr(json, 'comment'),
+        id: rInt(json, 'id'),
+        rate: rInt(json, 'rate'),
+        tags: oList(json, 'tags', (e) => e as String) ?? [],
+        type: CollectionType.fromValue(rInt(json, 'type')),
         updatedAt: DateTime.fromMillisecondsSinceEpoch(
-          ((json['updatedAt'] as num?)?.toInt() ?? 0) * 1000,
+          rInt(json, 'updatedAt') * 1000,
         ),
       );
 }
@@ -118,14 +116,10 @@ class SubjectRating {
   });
 
   factory SubjectRating.fromJson(Map<String, dynamic> json) => SubjectRating(
-    count:
-        (json['count'] as List<dynamic>?)
-            ?.map((e) => (e as num).toInt())
-            .toList() ??
-        [],
-    rank: (json['rank'] as num?)?.toInt() ?? 0,
-    score: (json['score'] as num?)?.toDouble() ?? 0.0,
-    total: (json['total'] as num?)?.toInt() ?? 0,
+    count: oList(json, 'count', (e) => (e as num).toInt()) ?? [],
+    rank: rInt(json, 'rank'),
+    score: rDouble(json, 'score'),
+    total: rInt(json, 'total'),
   );
 }
 
@@ -157,24 +151,20 @@ class SlimSubject {
   String get displayName => nameCn.isNotEmpty ? nameCn : name;
 
   factory SlimSubject.fromJson(Map<String, dynamic> json) => SlimSubject(
-    id: (json['id'] as num?)?.toInt() ?? 0,
-    images: json['images'] != null
-        ? SubjectImages.fromJson(json['images'] as Map<String, dynamic>)
+    id: rInt(json, 'id'),
+    images: oMap(json, 'images') != null
+        ? SubjectImages.fromJson(oMap(json, 'images')!)
         : null,
-    info: json['info'] as String? ?? '',
-    interest: json['interest'] != null
-        ? SlimSubjectInterest.fromJson(json['interest'] as Map<String, dynamic>)
+    info: rStr(json, 'info'),
+    interest: oMap(json, 'interest') != null
+        ? SlimSubjectInterest.fromJson(oMap(json, 'interest')!)
         : null,
-    locked: json['locked'] as bool? ?? false,
-    name: json['name'] as String? ?? '',
-    nameCn: json['nameCN'] as String? ?? '',
-    nsfw: json['nsfw'] as bool? ?? false,
-    rating: json['rating'] != null
-        ? SubjectRating.fromJson(json['rating'] as Map<String, dynamic>)
-        : const SubjectRating(count: [], rank: 0, score: 0, total: 0),
-    type: SubjectType.fromValue(
-      (json['type'] as num?)?.toInt() ?? SubjectType.anime.value,
-    ),
+    locked: rBool(json, 'locked'),
+    name: rStr(json, 'name'),
+    nameCn: rStr(json, 'nameCN'),
+    nsfw: rBool(json, 'nsfw'),
+    rating: SubjectRating.fromJson(rMap(json, 'rating')),
+    type: SubjectType.fromValue(rInt(json, 'type')),
   );
 }
 
@@ -192,10 +182,10 @@ class SubjectAirtime {
   });
 
   factory SubjectAirtime.fromJson(Map<String, dynamic> json) => SubjectAirtime(
-    date: json['date'] as String? ?? '',
-    month: (json['month'] as num?)?.toInt() ?? 0,
-    weekday: (json['weekday'] as num?)?.toInt() ?? 0,
-    year: (json['year'] as num?)?.toInt() ?? 0,
+    date: rStr(json, 'date'),
+    month: rInt(json, 'month'),
+    weekday: rInt(json, 'weekday'),
+    year: rInt(json, 'year'),
   );
 }
 
@@ -224,21 +214,17 @@ class SubjectInterest {
 
   factory SubjectInterest.fromJson(Map<String, dynamic> json) =>
       SubjectInterest(
-        comment: json['comment'] as String? ?? '',
-        epStatus: (json['epStatus'] as num?)?.toInt() ?? 0,
-        id: (json['id'] as num?)?.toInt() ?? 0,
-        private: json['private'] as bool? ?? false,
-        rate: (json['rate'] as num?)?.toInt() ?? 0,
-        tags:
-            (json['tags'] as List<dynamic>?)
-                ?.map((e) => e as String)
-                .toList() ??
-            [],
-        type: CollectionType.fromValue((json['type'] as num?)?.toInt() ?? 1),
+        comment: rStr(json, 'comment'),
+        epStatus: rInt(json, 'epStatus'),
+        id: rInt(json, 'id'),
+        private: rBool(json, 'private'),
+        rate: rInt(json, 'rate'),
+        tags: oList(json, 'tags', (e) => e as String) ?? [],
+        type: CollectionType.fromValue(rInt(json, 'type')),
         updatedAt: DateTime.fromMillisecondsSinceEpoch(
-          ((json['updatedAt'] as num?)?.toInt() ?? 0) * 1000,
+          rInt(json, 'updatedAt') * 1000,
         ),
-        volStatus: (json['volStatus'] as num?)?.toInt() ?? 0,
+        volStatus: rInt(json, 'volStatus'),
       );
 }
 
@@ -267,17 +253,15 @@ class SubjectPlatform {
 
   factory SubjectPlatform.fromJson(Map<String, dynamic> json) =>
       SubjectPlatform(
-        alias: json['alias'] as String? ?? '',
+        alias: rStr(json, 'alias'),
         enableHeader: json['enableHeader'] as bool?,
-        id: (json['id'] as num?)?.toInt() ?? 0,
-        order: (json['order'] as num?)?.toInt(),
-        searchString: json['searchString'] as String?,
-        sortKeys: (json['sortKeys'] as List<dynamic>?)
-            ?.map((e) => e as String)
-            .toList(),
-        type: json['type'] as String? ?? '',
-        typeCN: json['typeCN'] as String? ?? '',
-        wikiTpl: json['wikiTpl'] as String?,
+        id: rInt(json, 'id'),
+        order: oInt(json, 'order'),
+        searchString: oStr(json, 'searchString'),
+        sortKeys: oList(json, 'sortKeys', (e) => e as String),
+        type: rStr(json, 'type'),
+        typeCN: rStr(json, 'typeCN'),
+        wikiTpl: oStr(json, 'wikiTpl'),
       );
 }
 
@@ -287,10 +271,8 @@ class SubjectTag {
 
   const SubjectTag({required this.name, required this.count});
 
-  factory SubjectTag.fromJson(Map<String, dynamic> json) => SubjectTag(
-    name: json['name'] as String? ?? '',
-    count: (json['count'] as num?)?.toInt() ?? 0,
-  );
+  factory SubjectTag.fromJson(Map<String, dynamic> json) =>
+      SubjectTag(name: rStr(json, 'name'), count: rInt(json, 'count'));
 }
 
 class Subject {
@@ -345,9 +327,7 @@ class Subject {
   String get displayName => nameCn.isNotEmpty ? nameCn : name;
 
   factory Subject.fromJson(Map<String, dynamic> json) => Subject(
-    airtime: json['airtime'] != null
-        ? SubjectAirtime.fromJson(json['airtime'] as Map<String, dynamic>)
-        : const SubjectAirtime(date: '', month: 0, weekday: 0, year: 0),
+    airtime: SubjectAirtime.fromJson(rMap(json, 'airtime')),
     collection:
         (json['collection'] as Map<String, dynamic>?)?.map(
           (k, v) => MapEntry(
@@ -356,46 +336,42 @@ class Subject {
           ),
         ) ??
         {},
-    eps: (json['eps'] as num?)?.toInt() ?? 0,
-    id: (json['id'] as num?)?.toInt() ?? 0,
-    images: json['images'] != null
-        ? SubjectImages.fromJson(json['images'] as Map<String, dynamic>)
+    eps: rInt(json, 'eps'),
+    id: rInt(json, 'id'),
+    images: oMap(json, 'images') != null
+        ? SubjectImages.fromJson(oMap(json, 'images')!)
         : null,
-    info: json['info'] as String? ?? '',
+    info: rStr(json, 'info'),
     infobox:
-        (json['infobox'] as List<dynamic>?)
-            ?.map((e) => InfoboxItem.fromJson(e as Map<String, dynamic>))
-            .toList() ??
+        oList(
+          json,
+          'infobox',
+          (e) => InfoboxItem.fromJson(e as Map<String, dynamic>),
+        ) ??
         [],
-    interest: json['interest'] != null
-        ? SubjectInterest.fromJson(json['interest'] as Map<String, dynamic>)
+    interest: oMap(json, 'interest') != null
+        ? SubjectInterest.fromJson(oMap(json, 'interest')!)
         : null,
-    locked: json['locked'] as bool? ?? false,
-    metaTags:
-        (json['metaTags'] as List<dynamic>?)
-            ?.map((e) => e.toString())
-            .toList() ??
-        [],
-    name: json['name'] as String? ?? '',
-    nameCn: json['nameCN'] as String? ?? '',
-    nsfw: json['nsfw'] as bool? ?? false,
-    platform: json['platform'] != null
-        ? SubjectPlatform.fromJson(json['platform'] as Map<String, dynamic>)
-        : const SubjectPlatform(alias: '', id: 0, type: '', typeCN: ''),
-    rating: json['rating'] != null
-        ? SubjectRating.fromJson(json['rating'] as Map<String, dynamic>)
-        : const SubjectRating(count: [], rank: 0, score: 0, total: 0),
-    redirect: (json['redirect'] as num?)?.toInt() ?? 0,
-    series: json['series'] as bool? ?? false,
-    seriesEntry: (json['seriesEntry'] as num?)?.toInt() ?? 0,
-    summary: json['summary'] as String? ?? '',
+    locked: rBool(json, 'locked'),
+    metaTags: oList(json, 'metaTags', (e) => e.toString()) ?? [],
+    name: rStr(json, 'name'),
+    nameCn: rStr(json, 'nameCN'),
+    nsfw: rBool(json, 'nsfw'),
+    platform: SubjectPlatform.fromJson(rMap(json, 'platform')),
+    rating: SubjectRating.fromJson(rMap(json, 'rating')),
+    redirect: rInt(json, 'redirect'),
+    series: rBool(json, 'series'),
+    seriesEntry: rInt(json, 'seriesEntry'),
+    summary: rStr(json, 'summary'),
     tags:
-        (json['tags'] as List<dynamic>?)
-            ?.map((e) => SubjectTag.fromJson(e as Map<String, dynamic>))
-            .toList() ??
+        oList(
+          json,
+          'tags',
+          (e) => SubjectTag.fromJson(e as Map<String, dynamic>),
+        ) ??
         [],
-    type: SubjectType.fromValue((json['type'] as num?)?.toInt() ?? 2),
-    volumes: (json['volumes'] as num?)?.toInt() ?? 0,
+    type: SubjectType.fromValue(rInt(json, 'type')),
+    volumes: rInt(json, 'volumes'),
   );
 }
 
@@ -406,11 +382,13 @@ class InfoboxItem {
   const InfoboxItem({required this.key, required this.value});
 
   factory InfoboxItem.fromJson(Map<String, dynamic> json) => InfoboxItem(
-    key: json['key'] as String? ?? '',
+    key: rStr(json, 'key'),
     value:
-        (json['value'] as List<dynamic>?)
-            ?.map((e) => InfoboxValue.fromJson(e as Map<String, dynamic>))
-            .toList() ??
+        oList(
+          json,
+          'value',
+          (e) => InfoboxValue.fromJson(e as Map<String, dynamic>),
+        ) ??
         [],
   );
 }
@@ -422,5 +400,5 @@ class InfoboxValue {
   const InfoboxValue({required this.v, this.k});
 
   factory InfoboxValue.fromJson(Map<String, dynamic> json) =>
-      InfoboxValue(v: json['v'] as String? ?? '', k: json['k'] as String?);
+      InfoboxValue(v: rStr(json, 'v'), k: oStr(json, 'k'));
 }

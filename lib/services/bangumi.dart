@@ -1,3 +1,4 @@
+import 'package:animikan/models/calender.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import '../config.dart';
@@ -18,5 +19,10 @@ class BangumiClient {
         },
       ),
     );
+  }
+
+  Future<Calendar> getCalendar() async {
+    final resp = await _nextDio.get('/p1/calendar');
+    return Calendar.fromJson(resp.data as Map<String, dynamic>);
   }
 }
