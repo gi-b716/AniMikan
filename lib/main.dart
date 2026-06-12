@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'config.dart';
+import 'theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await BangumiConst.init();
-  runApp(const MainApp());
+  runApp(MainApp());
 }
 
 class MainApp extends StatelessWidget {
@@ -12,10 +13,13 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       title: 'AniMikan',
       debugShowCheckedModeBanner: false,
-      home: Scaffold(body: Center(child: Text('Hello World!'))),
+      theme: AppTheme.of(Brightness.light),
+      darkTheme: AppTheme.of(Brightness.dark),
+      themeMode: ThemeMode.system,
+      home: const Scaffold(body: Center(child: Text('Hello World!'))),
     );
   }
 }
