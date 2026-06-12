@@ -4,7 +4,6 @@ import 'package:flutter/foundation.dart';
 import '../config.dart';
 
 class BangumiClient {
-  // ignore: unused_field
   late final Dio _nextDio;
 
   BangumiClient() {
