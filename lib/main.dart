@@ -89,7 +89,10 @@ class _AppShellState extends State<AppShell> {
   }
 
   Widget _wide() {
+    final ColorScheme colors = Theme.of(context).colorScheme;
     return Scaffold(
+      // reversed
+      backgroundColor: colors.surfaceContainerHigh,
       body: Row(
         children: [
           NavigationRail(
@@ -97,6 +100,8 @@ class _AppShellState extends State<AppShell> {
             onDestinationSelected: _onSelect,
             labelType: NavigationRailLabelType.selected,
             groupAlignment: 1.0,
+            // reversed
+            backgroundColor: colors.surfaceContainerHigh,
             leading: Padding(
               padding: const EdgeInsets.only(top: 12, bottom: 24),
               child: FloatingActionButton(
@@ -111,8 +116,25 @@ class _AppShellState extends State<AppShell> {
             ),
             destinations: [for (final t in _tabs) t.rail],
           ),
-          const VerticalDivider(width: 1),
-          Expanded(child: _buildPage()),
+          Expanded(
+            child: Container(
+              decoration: BoxDecoration(
+                // reversed
+                color: colors.surfaceContainer,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(16.0),
+                  bottomLeft: Radius.circular(16.0),
+                ),
+              ),
+              child: ClipRRect(
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(16.0),
+                  bottomLeft: Radius.circular(16.0),
+                ),
+                child: _buildPage(),
+              ),
+            ),
+          ),
         ],
       ),
     );
