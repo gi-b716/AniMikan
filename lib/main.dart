@@ -1,10 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:window_manager/window_manager.dart';
+import 'utils/platform.dart';
 import 'config.dart';
 import 'theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
   await BangumiConst.init();
+
+  if (isDesktop()) {
+    await windowManager.ensureInitialized();
+    await windowManager.setMinimumSize(const Size(400, 400));
+  }
+
   runApp(MainApp());
 }
 
