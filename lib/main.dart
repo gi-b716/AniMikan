@@ -9,16 +9,21 @@ void main() async {
 
   await BangumiConst.init();
 
+  bool isMaximized = false;
   if (isDesktop()) {
     await windowManager.ensureInitialized();
     await windowManager.setMinimumSize(const Size(400, 400));
+    await windowManager.setTitleBarStyle(TitleBarStyle.hidden);
+    isMaximized = await windowManager.isMaximized();
   }
 
-  runApp(MainApp());
+  runApp(MainApp(isMaximized: isMaximized));
 }
 
 class MainApp extends StatelessWidget {
-  const MainApp({super.key});
+  final bool isMaximized;
+
+  const MainApp({super.key, this.isMaximized = false});
 
   @override
   Widget build(BuildContext context) {
@@ -28,20 +33,53 @@ class MainApp extends StatelessWidget {
       theme: AppTheme.of(Brightness.light),
       darkTheme: AppTheme.of(Brightness.dark),
       themeMode: ThemeMode.system,
-      home: const AppShell(),
+      home: AppShell(initialIsMaximized: isMaximized),
     );
   }
 }
 
 class AppShell extends StatefulWidget {
-  const AppShell({super.key});
+  final bool initialIsMaximized;
+
+  const AppShell({super.key, this.initialIsMaximized = false});
 
   @override
   State<AppShell> createState() => _AppShellState();
 }
 
-class _AppShellState extends State<AppShell> {
+class _AppShellState extends State<AppShell> with WindowListener {
   int _index = 0;
+  late bool _isMaximized;
+
+  final _navRailKey = GlobalKey();
+  double? _navRailWidth;
+
+  @override
+  void initState() {
+    super.initState();
+    _isMaximized = widget.initialIsMaximized;
+    if (isDesktop()) {
+      windowManager.addListener(this);
+      WidgetsBinding.instance.addPostFrameCallback((_) => _measureNavRail());
+    }
+  }
+
+  void _measureNavRail() {
+    final box = _navRailKey.currentContext?.findRenderObject() as RenderBox?;
+    if (box != null && mounted) setState(() => _navRailWidth = box.size.width);
+  }
+
+  @override
+  void dispose() {
+    if (isDesktop()) windowManager.removeListener(this);
+    super.dispose();
+  }
+
+  @override
+  void onWindowMaximize() => setState(() => _isMaximized = true);
+
+  @override
+  void onWindowUnmaximize() => setState(() => _isMaximized = false);
 
   static const _tabs = <_TabConfig>[
     _TabConfig(
@@ -91,50 +129,47 @@ class _AppShellState extends State<AppShell> {
   Widget _wide() {
     final ColorScheme colors = Theme.of(context).colorScheme;
     return Scaffold(
-      // reversed
       backgroundColor: colors.surfaceContainerHigh,
-      body: Row(
+      body: Stack(
         children: [
-          NavigationRail(
-            selectedIndex: _index,
-            onDestinationSelected: _onSelect,
-            labelType: NavigationRailLabelType.selected,
-            groupAlignment: 1.0,
-            // reversed
-            backgroundColor: colors.surfaceContainerHigh,
-            leading: Padding(
-              padding: const EdgeInsets.only(top: 12, bottom: 24),
-              child: FloatingActionButton(
-                elevation: 0,
-                heroTag: 'search',
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
+          Row(
+            children: [
+              NavigationRail(
+                key: _navRailKey,
+                selectedIndex: _index,
+                onDestinationSelected: _onSelect,
+                labelType: NavigationRailLabelType.selected,
+                groupAlignment: 1.0,
+                backgroundColor: colors.surfaceContainerHigh,
+                leading: Padding(
+                  padding: const EdgeInsets.only(top: 12, bottom: 24),
+                  child: FloatingActionButton(
+                    elevation: 0,
+                    heroTag: 'search',
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    onPressed: () {},
+                    child: const Icon(Icons.search, size: 28),
+                  ),
                 ),
-                onPressed: () {},
-                child: const Icon(Icons.search, size: 28),
+                destinations: [for (final t in _tabs) t.rail],
               ),
-            ),
-            destinations: [for (final t in _tabs) t.rail],
+              Expanded(
+                child: ClipRRect(
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(16.0),
+                    bottomLeft: Radius.circular(16.0),
+                  ),
+                  child: ColoredBox(
+                    color: colors.surfaceContainer,
+                    child: _buildPage(),
+                  ),
+                ),
+              ),
+            ],
           ),
-          Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                // reversed
-                color: colors.surfaceContainer,
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(16.0),
-                  bottomLeft: Radius.circular(16.0),
-                ),
-              ),
-              child: ClipRRect(
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(16.0),
-                  bottomLeft: Radius.circular(16.0),
-                ),
-                child: _buildPage(),
-              ),
-            ),
-          ),
+          ..._buildTitleBarOverlay(left: _navRailWidth ?? 0),
         ],
       ),
     );
@@ -142,13 +177,31 @@ class _AppShellState extends State<AppShell> {
 
   Widget _narrow() {
     return Scaffold(
-      body: _buildPage(),
+      body: Stack(children: [_buildPage(), ..._buildTitleBarOverlay()]),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _index,
         onDestinationSelected: _onSelect,
         destinations: [for (final t in _tabs) t.bar],
       ),
     );
+  }
+
+  List<Widget> _buildTitleBarOverlay({double left = 0}) {
+    if (!isDesktop()) return const [];
+    return [
+      Positioned(
+        top: 0,
+        left: left,
+        right: 0,
+        height: 30,
+        child: DragToMoveArea(child: Container(color: Colors.transparent)),
+      ),
+      Positioned(
+        top: 0,
+        right: 0,
+        child: _WindowButtons(isMaximized: _isMaximized),
+      ),
+    ];
   }
 
   Widget _buildPage() {
@@ -183,4 +236,97 @@ class _TabConfig {
     selectedIcon: Icon(selectedIcon),
     label: label,
   );
+}
+
+class _WindowButtons extends StatelessWidget {
+  final bool isMaximized;
+
+  const _WindowButtons({required this.isMaximized});
+
+  @override
+  Widget build(BuildContext context) {
+    final ColorScheme colors = Theme.of(context).colorScheme;
+    const double iconSize = 14.0;
+    final Color iconColor = colors.onSurface;
+    final Color hoverBg = colors.onSurface.withValues(alpha: 0.1);
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _TitleBarButton(
+          icon: Icons.horizontal_rule_rounded,
+          size: iconSize,
+          color: iconColor,
+          hoverColor: hoverBg,
+          onPressed: () => windowManager.minimize(),
+        ),
+        _TitleBarButton(
+          icon: isMaximized
+              ? Icons.filter_none_rounded
+              : Icons.crop_square_rounded,
+          size: iconSize + 2,
+          color: iconColor,
+          hoverColor: hoverBg,
+          onPressed: () {
+            if (isMaximized) {
+              windowManager.unmaximize();
+            } else {
+              windowManager.maximize();
+            }
+          },
+        ),
+        _TitleBarButton(
+          icon: Icons.close_rounded,
+          size: iconSize + 2,
+          color: iconColor,
+          hoverColor: const Color(0xFFC42B1C),
+          onPressed: () => windowManager.close(),
+        ),
+      ],
+    );
+  }
+}
+
+class _TitleBarButton extends StatefulWidget {
+  final IconData icon;
+  final double size;
+  final Color color;
+  final VoidCallback onPressed;
+  final Color hoverColor;
+
+  const _TitleBarButton({
+    required this.icon,
+    required this.size,
+    required this.color,
+    required this.onPressed,
+    required this.hoverColor,
+  });
+
+  @override
+  State<_TitleBarButton> createState() => _TitleBarButtonState();
+}
+
+class _TitleBarButtonState extends State<_TitleBarButton> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: Container(
+        width: 38,
+        height: 38,
+        color: _isHovered ? widget.hoverColor : Colors.transparent,
+        child: InkWell(
+          onTap: widget.onPressed,
+          splashColor: Colors.transparent,
+          highlightColor: Colors.transparent,
+          child: Center(
+            child: Icon(widget.icon, size: widget.size, color: widget.color),
+          ),
+        ),
+      ),
+    );
+  }
 }
