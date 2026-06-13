@@ -136,7 +136,6 @@ class _AppShellState extends State<AppShell> with WindowListener {
             children: [
               NavigationRail(
                 key: _navRailKey,
-                minWidth: isDesktop() ? null : 56,
                 selectedIndex: _index,
                 onDestinationSelected: _onSelect,
                 labelType: NavigationRailLabelType.selected,
