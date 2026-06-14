@@ -32,14 +32,14 @@ enum WeekDay {
 }
 
 class CalendarSubject {
-  final Subject subject;
+  final SlimSubject subject;
   final int watchers;
 
   const CalendarSubject({required this.subject, required this.watchers});
 
   factory CalendarSubject.fromJson(Map<String, dynamic> json) =>
       CalendarSubject(
-        subject: Subject.fromJson(rMap(json, 'subject')),
+        subject: SlimSubject.fromJson(rMap(json, 'subject')),
         watchers: rInt(json, 'watchers'),
       );
 }
