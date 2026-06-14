@@ -5,13 +5,10 @@ class BangumiConst {
 
   static const String nextApi = 'https://next.bgm.tv';
 
-  static String userAgent =
-      'gi-b716/AniMikan (https://github.com/gi-b716/AniMikan)';
+  static late final String userAgent;
 
   static Future<void> init() async {
     final info = await PackageInfo.fromPlatform();
-
-    /// add version to userAgent
     userAgent =
         'gi-b716/AniMikan/${info.version} (https://github.com/gi-b716/AniMikan)';
   }

@@ -1,20 +1,29 @@
-int rInt(Map<String, dynamic> json, String key) => (json[key] as num).toInt();
+import 'dart:core';
+
+Never _missing(String key) =>
+    throw ArgumentError('Required field "$key" is missing or null in JSON');
+
+T _req<T>(Map<String, dynamic> json, String key) =>
+    json[key] as T? ?? _missing(key);
+
+int rInt(Map<String, dynamic> json, String key) =>
+    (_req<num>(json, key)).toInt();
 
 double rDouble(Map<String, dynamic> json, String key) =>
-    (json[key] as num).toDouble();
+    (_req<num>(json, key)).toDouble();
 
-String rStr(Map<String, dynamic> json, String key) => json[key] as String;
+String rStr(Map<String, dynamic> json, String key) => _req<String>(json, key);
 
-bool rBool(Map<String, dynamic> json, String key) => json[key] as bool;
+bool rBool(Map<String, dynamic> json, String key) => _req<bool>(json, key);
 
 Map<String, dynamic> rMap(Map<String, dynamic> json, String key) =>
-    json[key] as Map<String, dynamic>;
+    _req<Map<String, dynamic>>(json, key);
 
 List<T> rList<T>(
   Map<String, dynamic> json,
   String key,
   T Function(dynamic) convert,
-) => (json[key] as List<dynamic>).map(convert).toList();
+) => _req<List<dynamic>>(json, key).map(convert).toList();
 
 int? oInt(Map<String, dynamic> json, String key) =>
     (json[key] as num?)?.toInt();

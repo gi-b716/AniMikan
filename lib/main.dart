@@ -48,11 +48,10 @@ class AppShell extends StatefulWidget {
 }
 
 class _AppShellState extends State<AppShell> with WindowListener {
+  static const double _kTitleBarHeight = 38.0;
+
   int _index = 0;
   late bool _isMaximized;
-
-  final _navRailKey = GlobalKey();
-  double? _navRailWidth;
 
   @override
   void initState() {
@@ -60,13 +59,7 @@ class _AppShellState extends State<AppShell> with WindowListener {
     _isMaximized = widget.initialIsMaximized;
     if (isDesktop()) {
       windowManager.addListener(this);
-      WidgetsBinding.instance.addPostFrameCallback((_) => _measureNavRail());
     }
-  }
-
-  void _measureNavRail() {
-    final box = _navRailKey.currentContext?.findRenderObject() as RenderBox?;
-    if (box != null && mounted) setState(() => _navRailWidth = box.size.width);
   }
 
   @override
@@ -128,56 +121,74 @@ class _AppShellState extends State<AppShell> with WindowListener {
 
   Widget _wide() {
     final ColorScheme colors = Theme.of(context).colorScheme;
+    final bool desktop = isDesktop();
+
     return Scaffold(
       backgroundColor: colors.surfaceContainerHigh,
-      body: Stack(
+      body: Row(
         children: [
-          Row(
-            children: [
-              NavigationRail(
-                key: _navRailKey,
-                selectedIndex: _index,
-                onDestinationSelected: _onSelect,
-                labelType: NavigationRailLabelType.selected,
-                groupAlignment: 1.0,
-                backgroundColor: colors.surfaceContainerHigh,
-                leading: Padding(
-                  padding: const EdgeInsets.only(top: 12, bottom: 24),
-                  child: FloatingActionButton(
-                    elevation: 0,
-                    heroTag: 'search',
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    onPressed: () {},
-                    child: const Icon(Icons.search, size: 28),
-                  ),
+          NavigationRail(
+            selectedIndex: _index,
+            onDestinationSelected: _onSelect,
+            labelType: NavigationRailLabelType.selected,
+            groupAlignment: 1.0,
+            backgroundColor: colors.surfaceContainerHigh,
+            leading: Padding(
+              padding: const EdgeInsets.only(top: 12, bottom: 24),
+              child: FloatingActionButton(
+                elevation: 0,
+                heroTag: 'search',
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
                 ),
-                destinations: [for (final t in _tabs) t.rail],
+                onPressed: () {},
+                child: const Icon(Icons.search, size: 28),
               ),
-              Expanded(
-                child: ClipRRect(
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(16.0),
-                    bottomLeft: Radius.circular(16.0),
-                  ),
-                  child: ColoredBox(
-                    color: colors.surfaceContainer,
-                    child: _buildPage(),
-                  ),
-                ),
-              ),
-            ],
+            ),
+            destinations: [for (final t in _tabs) t.rail],
           ),
-          ..._buildTitleBarOverlay(left: _navRailWidth ?? 0),
+          Expanded(
+            child: ClipRRect(
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(16.0),
+                bottomLeft: Radius.circular(16.0),
+              ),
+              child: ColoredBox(
+                color: colors.surfaceContainer,
+                child: Stack(
+                  children: [
+                    Column(
+                      children: [
+                        if (desktop) _buildTitleBar(),
+                        Expanded(child: _buildPage()),
+                      ],
+                    ),
+                    if (desktop)
+                      Positioned(
+                        top: 0,
+                        right: 0,
+                        child: _WindowButtons(isMaximized: _isMaximized),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     );
   }
 
   Widget _narrow() {
+    final bool desktop = isDesktop();
+
     return Scaffold(
-      body: Stack(children: [_buildPage(), ..._buildTitleBarOverlay()]),
+      body: Column(
+        children: [
+          if (desktop) _buildTitleBar(withButtons: true),
+          Expanded(child: _buildPage()),
+        ],
+      ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _index,
         onDestinationSelected: _onSelect,
@@ -186,22 +197,23 @@ class _AppShellState extends State<AppShell> with WindowListener {
     );
   }
 
-  List<Widget> _buildTitleBarOverlay({double left = 0}) {
-    if (!isDesktop()) return const [];
-    return [
-      Positioned(
-        top: 0,
-        left: left,
-        right: 0,
-        height: 30,
-        child: DragToMoveArea(child: Container(color: Colors.transparent)),
+  Widget _buildTitleBar({bool withButtons = false}) {
+    return SizedBox(
+      height: _kTitleBarHeight,
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: DragToMoveArea(child: Container(color: Colors.transparent)),
+          ),
+          if (withButtons)
+            Positioned(
+              top: 0,
+              right: 0,
+              child: _WindowButtons(isMaximized: _isMaximized),
+            ),
+        ],
       ),
-      Positioned(
-        top: 0,
-        right: 0,
-        child: _WindowButtons(isMaximized: _isMaximized),
-      ),
-    ];
+    );
   }
 
   Widget _buildPage() {

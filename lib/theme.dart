@@ -7,7 +7,6 @@ class AppTheme {
     colorSchemeSeed: const Color(0xFF00A1D6),
     useMaterial3: true,
     brightness: brightness,
-    fontFamily: 'Roboto',
     fontFamilyFallback: const [
       'Noto Sans SC',
       'PingFang SC',

@@ -2,13 +2,13 @@ import '../utils/validation.dart';
 import 'subject.dart';
 
 enum WeekDay {
-  Monday(1), // ignore: constant_identifier_names
-  Tuesday(2), // ignore: constant_identifier_names
-  Wednesday(3), // ignore: constant_identifier_names
-  Thursday(4), // ignore: constant_identifier_names
-  Friday(5), // ignore: constant_identifier_names
-  Saturday(6), // ignore: constant_identifier_names
-  Sunday(7); // ignore: constant_identifier_names
+  monday(1),
+  tuesday(2),
+  wednesday(3),
+  thursday(4),
+  friday(5),
+  saturday(6),
+  sunday(7);
 
   const WeekDay(this.value);
   final int value;
@@ -16,18 +16,18 @@ enum WeekDay {
   static WeekDay fromValue(int value) {
     return WeekDay.values.firstWhere(
       (e) => e.value == value,
-      orElse: () => throw ArgumentError('Invalid WeekDay value: $value'),
+      orElse: () => WeekDay.monday,
     );
   }
 
   String get label => switch (this) {
-    WeekDay.Monday => '星期一',
-    WeekDay.Tuesday => '星期二',
-    WeekDay.Wednesday => '星期三',
-    WeekDay.Thursday => '星期四',
-    WeekDay.Friday => '星期五',
-    WeekDay.Saturday => '星期六',
-    WeekDay.Sunday => '星期日',
+    WeekDay.monday => '星期一',
+    WeekDay.tuesday => '星期二',
+    WeekDay.wednesday => '星期三',
+    WeekDay.thursday => '星期四',
+    WeekDay.friday => '星期五',
+    WeekDay.saturday => '星期六',
+    WeekDay.sunday => '星期日',
   };
 }
 

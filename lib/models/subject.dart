@@ -5,14 +5,15 @@ enum CollectionType {
   collect(2),
   doing(3),
   onHold(4),
-  dropped(5);
+  dropped(5),
+  unknown(-1);
 
   const CollectionType(this.value);
   final int value;
 
   static CollectionType fromValue(int v) => CollectionType.values.firstWhere(
     (e) => e.value == v,
-    orElse: () => throw ArgumentError('Unknown CollectionType value: $v'),
+    orElse: () => CollectionType.unknown,
   );
 
   String get label => switch (this) {
@@ -21,6 +22,7 @@ enum CollectionType {
     CollectionType.doing => '在看',
     CollectionType.onHold => '搁置',
     CollectionType.dropped => '抛弃',
+    CollectionType.unknown => '未知',
   };
 }
 
@@ -29,14 +31,15 @@ enum SubjectType {
   anime(2),
   music(3),
   game(4),
-  real(6);
+  real(6),
+  unknown(-1);
 
   const SubjectType(this.value);
   final int value;
 
   static SubjectType fromValue(int v) => SubjectType.values.firstWhere(
     (e) => e.value == v,
-    orElse: () => throw ArgumentError('Unknown SubjectType value: $v'),
+    orElse: () => SubjectType.unknown,
   );
 
   String get label => switch (this) {
@@ -45,6 +48,7 @@ enum SubjectType {
     SubjectType.music => '音乐',
     SubjectType.game => '游戏',
     SubjectType.real => '三次元',
+    SubjectType.unknown => '未知',
   };
 }
 
@@ -150,22 +154,22 @@ class SlimSubject {
 
   String get displayName => nameCn.isNotEmpty ? nameCn : name;
 
-  factory SlimSubject.fromJson(Map<String, dynamic> json) => SlimSubject(
-    id: rInt(json, 'id'),
-    images: oMap(json, 'images') != null
-        ? SubjectImages.fromJson(oMap(json, 'images')!)
-        : null,
-    info: rStr(json, 'info'),
-    interest: oMap(json, 'interest') != null
-        ? SlimSubjectInterest.fromJson(oMap(json, 'interest')!)
-        : null,
-    locked: rBool(json, 'locked'),
-    name: rStr(json, 'name'),
-    nameCn: rStr(json, 'nameCN'),
-    nsfw: rBool(json, 'nsfw'),
-    rating: SubjectRating.fromJson(rMap(json, 'rating')),
-    type: SubjectType.fromValue(rInt(json, 'type')),
-  );
+  factory SlimSubject.fromJson(Map<String, dynamic> json) {
+    final imgs = oMap(json, 'images');
+    final ints = oMap(json, 'interest');
+    return SlimSubject(
+      id: rInt(json, 'id'),
+      images: imgs != null ? SubjectImages.fromJson(imgs) : null,
+      info: rStr(json, 'info'),
+      interest: ints != null ? SlimSubjectInterest.fromJson(ints) : null,
+      locked: rBool(json, 'locked'),
+      name: rStr(json, 'name'),
+      nameCn: rStr(json, 'nameCN'),
+      nsfw: rBool(json, 'nsfw'),
+      rating: SubjectRating.fromJson(rMap(json, 'rating')),
+      type: SubjectType.fromValue(rInt(json, 'type')),
+    );
+  }
 }
 
 class SubjectAirtime {
@@ -326,53 +330,53 @@ class Subject {
 
   String get displayName => nameCn.isNotEmpty ? nameCn : name;
 
-  factory Subject.fromJson(Map<String, dynamic> json) => Subject(
-    airtime: SubjectAirtime.fromJson(rMap(json, 'airtime')),
-    collection:
-        (json['collection'] as Map<String, dynamic>?)?.map(
-          (k, v) => MapEntry(
-            CollectionType.fromValue(int.parse(k)),
-            (v as num).toInt(),
-          ),
-        ) ??
-        {},
-    eps: rInt(json, 'eps'),
-    id: rInt(json, 'id'),
-    images: oMap(json, 'images') != null
-        ? SubjectImages.fromJson(oMap(json, 'images')!)
-        : null,
-    info: rStr(json, 'info'),
-    infobox:
-        oList(
-          json,
-          'infobox',
-          (e) => InfoboxItem.fromJson(e as Map<String, dynamic>),
-        ) ??
-        [],
-    interest: oMap(json, 'interest') != null
-        ? SubjectInterest.fromJson(oMap(json, 'interest')!)
-        : null,
-    locked: rBool(json, 'locked'),
-    metaTags: oList(json, 'metaTags', (e) => e.toString()) ?? [],
-    name: rStr(json, 'name'),
-    nameCn: rStr(json, 'nameCN'),
-    nsfw: rBool(json, 'nsfw'),
-    platform: SubjectPlatform.fromJson(rMap(json, 'platform')),
-    rating: SubjectRating.fromJson(rMap(json, 'rating')),
-    redirect: rInt(json, 'redirect'),
-    series: rBool(json, 'series'),
-    seriesEntry: rInt(json, 'seriesEntry'),
-    summary: rStr(json, 'summary'),
-    tags:
-        oList(
-          json,
-          'tags',
-          (e) => SubjectTag.fromJson(e as Map<String, dynamic>),
-        ) ??
-        [],
-    type: SubjectType.fromValue(rInt(json, 'type')),
-    volumes: rInt(json, 'volumes'),
-  );
+  factory Subject.fromJson(Map<String, dynamic> json) {
+    final imgs = oMap(json, 'images');
+    final ints = oMap(json, 'interest');
+    return Subject(
+      airtime: SubjectAirtime.fromJson(rMap(json, 'airtime')),
+      collection:
+          (json['collection'] as Map<String, dynamic>?)?.map(
+            (k, v) => MapEntry(
+              CollectionType.fromValue(int.parse(k)),
+              (v as num).toInt(),
+            ),
+          ) ??
+          {},
+      eps: rInt(json, 'eps'),
+      id: rInt(json, 'id'),
+      images: imgs != null ? SubjectImages.fromJson(imgs) : null,
+      info: rStr(json, 'info'),
+      infobox:
+          oList(
+            json,
+            'infobox',
+            (e) => InfoboxItem.fromJson(e as Map<String, dynamic>),
+          ) ??
+          [],
+      interest: ints != null ? SubjectInterest.fromJson(ints) : null,
+      locked: rBool(json, 'locked'),
+      metaTags: oList(json, 'metaTags', (e) => e.toString()) ?? [],
+      name: rStr(json, 'name'),
+      nameCn: rStr(json, 'nameCN'),
+      nsfw: rBool(json, 'nsfw'),
+      platform: SubjectPlatform.fromJson(rMap(json, 'platform')),
+      rating: SubjectRating.fromJson(rMap(json, 'rating')),
+      redirect: rInt(json, 'redirect'),
+      series: rBool(json, 'series'),
+      seriesEntry: rInt(json, 'seriesEntry'),
+      summary: rStr(json, 'summary'),
+      tags:
+          oList(
+            json,
+            'tags',
+            (e) => SubjectTag.fromJson(e as Map<String, dynamic>),
+          ) ??
+          [],
+      type: SubjectType.fromValue(rInt(json, 'type')),
+      volumes: rInt(json, 'volumes'),
+    );
+  }
 }
 
 class InfoboxItem {
