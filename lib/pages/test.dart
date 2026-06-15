@@ -1,8 +1,8 @@
 import 'dart:async';
 
-import 'package:animikan/main.dart';
 import 'package:flutter/material.dart';
 
+import '../main.dart';
 import '../models/subject.dart';
 import '../widgets/subject_card.dart';
 

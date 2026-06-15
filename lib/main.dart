@@ -1,3 +1,4 @@
+import 'package:animikan/pages/calendar.dart';
 import 'package:animikan/pages/test.dart';
 import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
@@ -164,8 +165,7 @@ class _AppShellState extends State<AppShell> with WindowListener {
     ),
   ];
 
-  static Widget _buildCalendar(BuildContext _) =>
-      const Center(child: Text('日历'));
+  static Widget _buildCalendar(BuildContext _) => CalendarPage();
   static Widget _buildFavourites(BuildContext _) =>
       const Center(child: Text('收藏'));
   static Widget _buildCache(BuildContext _) => const Center(child: Text('缓存'));
