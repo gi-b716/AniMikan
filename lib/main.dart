@@ -40,12 +40,12 @@ class MainApp extends StatelessWidget {
 }
 
 class AppShellScope extends InheritedWidget {
-  final void Function(String?) setTitle;
+  final void Function(String?) notifyTitle;
   final int activeIndex;
 
   const AppShellScope({
     super.key,
-    required this.setTitle,
+    required this.notifyTitle,
     required this.activeIndex,
     required super.child,
   });
@@ -56,13 +56,31 @@ class AppShellScope extends InheritedWidget {
     return result!;
   }
 
-  void setTitleIfActive(int index, String title) {
-    if (index == activeIndex) setTitle(title);
+  static void setTitle(BuildContext context, String title) {
+    final scope = of(context);
+    final index = _TabIndexScope.of(context);
+    if (index == scope.activeIndex) scope.notifyTitle(title);
   }
 
   @override
   bool updateShouldNotify(AppShellScope oldWidget) =>
-      setTitle != oldWidget.setTitle || activeIndex != oldWidget.activeIndex;
+      notifyTitle != oldWidget.notifyTitle ||
+      activeIndex != oldWidget.activeIndex;
+}
+
+class _TabIndexScope extends InheritedWidget {
+  final int index;
+
+  const _TabIndexScope({required this.index, required super.child});
+
+  static int of(BuildContext context) {
+    final scope = context.dependOnInheritedWidgetOfExactType<_TabIndexScope>();
+    assert(scope != null, 'No _TabIndexScope found in context');
+    return scope!.index;
+  }
+
+  @override
+  bool updateShouldNotify(_TabIndexScope oldWidget) => index != oldWidget.index;
 }
 
 class AppShell extends StatefulWidget {
@@ -279,11 +297,14 @@ class _AppShellState extends State<AppShell> with WindowListener {
 
   Widget _buildPage() {
     return AppShellScope(
-      setTitle: setTitle,
+      notifyTitle: setTitle,
       activeIndex: _index,
       child: IndexedStack(
         index: _index,
-        children: [for (final t in _tabs) t.pageBuilder(context)],
+        children: [
+          for (int i = 0; i < _tabs.length; i++)
+            _TabIndexScope(index: i, child: _tabs[i].pageBuilder(context)),
+        ],
       ),
     );
   }

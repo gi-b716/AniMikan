@@ -38,7 +38,7 @@ class _TestPageState extends State<TestPage> {
         '${now.minute.toString().padLeft(2, '0')}:'
         '${now.second.toString().padLeft(2, '0')}';
 
-    AppShellScope.of(context).setTitleIfActive(4, timeStr);
+    AppShellScope.setTitle(context, timeStr);
 
     return Center(
       child: SubjectCard(
