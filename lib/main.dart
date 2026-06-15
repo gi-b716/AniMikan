@@ -1,12 +1,9 @@
-import 'package:animikan/models/subject.dart';
-import 'package:animikan/widgets/subject_card.dart';
+import 'package:animikan/pages/test.dart';
 import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
 import 'utils/platform.dart';
 import 'config.dart';
 import 'theme.dart';
-
-import 'package:ratings_plus/ratings_plus.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -42,6 +39,32 @@ class MainApp extends StatelessWidget {
   }
 }
 
+class AppShellScope extends InheritedWidget {
+  final void Function(String?) setTitle;
+  final int activeIndex;
+
+  const AppShellScope({
+    super.key,
+    required this.setTitle,
+    required this.activeIndex,
+    required super.child,
+  });
+
+  static AppShellScope of(BuildContext context) {
+    final result = context.dependOnInheritedWidgetOfExactType<AppShellScope>();
+    assert(result != null, 'No AppShellScope found in context');
+    return result!;
+  }
+
+  void setTitleIfActive(int index, String title) {
+    if (index == activeIndex) setTitle(title);
+  }
+
+  @override
+  bool updateShouldNotify(AppShellScope oldWidget) =>
+      setTitle != oldWidget.setTitle || activeIndex != oldWidget.activeIndex;
+}
+
 class AppShell extends StatefulWidget {
   final bool initialIsMaximized;
 
@@ -56,6 +79,18 @@ class _AppShellState extends State<AppShell> with WindowListener {
 
   int _index = 0;
   late bool _isMaximized;
+  String? _customTitle;
+
+  String get _currentTitle => _customTitle ?? _tabs[_index].label;
+
+  void setTitle(String? title) {
+    if (_customTitle == title || !mounted) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_customTitle != title && mounted) {
+        setState(() => _customTitle = title);
+      }
+    });
+  }
 
   @override
   void initState() {
@@ -116,17 +151,14 @@ class _AppShellState extends State<AppShell> with WindowListener {
   static Widget _buildFavourites(BuildContext _) =>
       const Center(child: Text('收藏'));
   static Widget _buildCache(BuildContext _) => const Center(child: Text('缓存'));
-  static Widget _buildTest(BuildContext _) => Center(
-    child: SubjectCard(
-      subject: SlimSubject.fromJson(testSubject),
-      watchers: 12040,
-      onTap: () {},
-    ),
-  );
+  static Widget _buildTest(BuildContext _) => TestPage();
   static Widget _buildSettings(BuildContext _) =>
       const Center(child: Text('设置'));
 
-  void _onSelect(int i) => setState(() => _index = i);
+  void _onSelect(int i) => setState(() {
+    _index = i;
+    _customTitle = null;
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -209,12 +241,30 @@ class _AppShellState extends State<AppShell> with WindowListener {
   }
 
   Widget _buildTitleBar({bool withButtons = false}) {
+    final ColorScheme colors = Theme.of(context).colorScheme;
+
     return SizedBox(
       height: _kTitleBarHeight,
       child: Stack(
         children: [
           Positioned.fill(
-            child: DragToMoveArea(child: Container(color: Colors.transparent)),
+            // child: DragToMoveArea(child: Container(color: Colors.transparent)),
+            child: DragToMoveArea(
+              child: Padding(
+                padding: const EdgeInsets.only(left: 16.0),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    _currentTitle,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: colors.onSurface.withValues(alpha: 0.7),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ),
+            ),
           ),
           if (withButtons)
             Positioned(
@@ -228,9 +278,13 @@ class _AppShellState extends State<AppShell> with WindowListener {
   }
 
   Widget _buildPage() {
-    return IndexedStack(
-      index: _index,
-      children: [for (final t in _tabs) t.pageBuilder(context)],
+    return AppShellScope(
+      setTitle: setTitle,
+      activeIndex: _index,
+      child: IndexedStack(
+        index: _index,
+        children: [for (final t in _tabs) t.pageBuilder(context)],
+      ),
     );
   }
 }
