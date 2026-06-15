@@ -406,3 +406,421 @@ class InfoboxValue {
   factory InfoboxValue.fromJson(Map<String, dynamic> json) =>
       InfoboxValue(v: rStr(json, 'v'), k: oStr(json, 'k'));
 }
+
+/// Test Subject: Bangumi 328609 ぼっち・ざ・ろっく！
+const testSubject = {
+  "airtime": {"date": "2022-10-08", "month": 10, "weekday": 6, "year": 2022},
+  "collection": {"1": 4261, "2": 62889, "3": 5073, "4": 1096, "5": 602},
+  "eps": 12,
+  "id": 328609,
+  "infobox": [
+    {
+      "key": "中文名",
+      "values": [
+        {"v": "孤独摇滚！"},
+      ],
+    },
+    {
+      "key": "别名",
+      "values": [
+        {"v": "BTR"},
+        {"v": "Bocchi the Rock!"},
+        {"v": "Bocchi the \"Guitar Hero\" Rock Story"},
+      ],
+    },
+    {
+      "key": "话数",
+      "values": [
+        {"v": "12"},
+      ],
+    },
+    {
+      "key": "放送开始",
+      "values": [
+        {"v": "2022年10月8日"},
+      ],
+    },
+    {
+      "key": "放送星期",
+      "values": [
+        {"v": "星期六"},
+      ],
+    },
+    {
+      "key": "官方网站",
+      "values": [
+        {"v": "https://bocchi.rocks/"},
+      ],
+    },
+    {
+      "key": "在线播放平台",
+      "values": [
+        {"v": ""},
+      ],
+    },
+    {
+      "key": "播放电视台",
+      "values": [
+        {"v": "TOKYO MX / BS11 / 群馬テレビ / とちぎテレビ"},
+      ],
+    },
+    {
+      "key": "其他电视台",
+      "values": [
+        {"v": "MRT宮崎放送 / MBS / RKB毎日放送 / AT-X"},
+      ],
+    },
+    {
+      "key": "播放结束",
+      "values": [
+        {"v": "2022年12月24日"},
+      ],
+    },
+    {
+      "key": "导演",
+      "values": [
+        {"v": "斎藤圭一郎"},
+      ],
+    },
+    {
+      "key": "音乐",
+      "values": [
+        {"v": "菊谷知樹"},
+      ],
+    },
+    {"key": "链接", "values": []},
+    {
+      "key": "其他",
+      "values": [
+        {"v": ""},
+      ],
+    },
+    {
+      "key": "Copyright",
+      "values": [
+        {"v": "©はまじあき／芳文社・アニプレックス"},
+      ],
+    },
+    {
+      "key": "原作",
+      "values": [
+        {"v": "はまじあき（芳文社「まんがタイムきららMAX」連載中）"},
+      ],
+    },
+    {
+      "key": "系列构成",
+      "values": [
+        {"v": "吉田恵里香"},
+      ],
+    },
+    {
+      "key": "人物设定",
+      "values": [
+        {"v": "けろりら"},
+      ],
+    },
+    {
+      "key": "总作画监督",
+      "values": [
+        {"v": "けろりら"},
+      ],
+    },
+    {
+      "key": "副导演",
+      "values": [
+        {"v": "山本ゆうすけ"},
+      ],
+    },
+    {
+      "key": "道具设计",
+      "values": [
+        {"v": "永木歩実；人偶制作：佐藤利幸"},
+      ],
+    },
+    {
+      "key": "色彩设计",
+      "values": [
+        {"v": "横田明日香"},
+      ],
+    },
+    {
+      "key": "美术监督",
+      "values": [
+        {"v": "守安靖尚"},
+      ],
+    },
+    {
+      "key": "美术设计",
+      "values": [
+        {"v": "taracod"},
+      ],
+    },
+    {
+      "key": "摄影监督",
+      "values": [
+        {"v": "金森つばさ"},
+      ],
+    },
+    {
+      "key": "摄影监督助理",
+      "values": [
+        {"v": "佐藤瑠里"},
+      ],
+    },
+    {
+      "key": "CG 导演",
+      "values": [
+        {"v": "宮地克明；Live CG导演：内田博明"},
+      ],
+    },
+    {
+      "key": "剪辑",
+      "values": [
+        {"v": "平木大輔"},
+      ],
+    },
+    {
+      "key": "音响监督",
+      "values": [
+        {"v": "藤田亜紀子"},
+      ],
+    },
+    {
+      "key": "音响",
+      "values": [
+        {"v": "HALF H・P STUDIO"},
+      ],
+    },
+    {
+      "key": "音效",
+      "values": [
+        {"v": "八十正太"},
+      ],
+    },
+    {
+      "key": "主题歌编曲",
+      "values": [
+        {"v": "三井律郎"},
+      ],
+    },
+    {
+      "key": "主题歌作曲",
+      "values": [
+        {"v": "音羽-otoha-（OP）、谷口鮪 (KANA-BOON)、中嶋イッキュウ、北澤ゆうほ（ED）"},
+      ],
+    },
+    {
+      "key": "主题歌作词",
+      "values": [
+        {"v": "樋口愛（ヒグチアイ）（OP）、谷口鮪 (KANA-BOON)、中嶋イッキュウ、北澤ゆうほ（ED）"},
+      ],
+    },
+    {
+      "key": "主题歌演出",
+      "values": [
+        {"v": "結束バンド (青山吉能、長谷川育美、水野朔、鈴代紗弓)"},
+      ],
+    },
+    {
+      "key": "插入歌演出",
+      "values": [
+        {"v": "結束バンド、SICK HACK"},
+      ],
+    },
+    {
+      "key": "OP・ED 分镜",
+      "values": [
+        {"v": "斎藤圭一郎 / スズキハルカ"},
+      ],
+    },
+    {
+      "key": "OP・ED 演出",
+      "values": [
+        {"v": "斎藤圭一郎 / スズキハルカ"},
+      ],
+    },
+    {
+      "key": "动画制作",
+      "values": [
+        {"v": "CloverWorks"},
+      ],
+    },
+    {
+      "key": "制片人",
+      "values": [
+        {"v": "石川達也、小林宏之"},
+      ],
+    },
+    {
+      "key": "製作",
+      "values": [
+        {"v": "Aniplex、芳文社"},
+      ],
+    },
+    {
+      "key": "3DCG",
+      "values": [
+        {"v": "Boundary；LIVE 舞台CG：exsa"},
+      ],
+    },
+    {
+      "key": "企画",
+      "values": [
+        {"v": "岩上敦宏、孝壽尚志"},
+      ],
+    },
+    {
+      "key": "音乐制作",
+      "values": [
+        {"v": "Aniplex"},
+      ],
+    },
+    {
+      "key": "制作统括",
+      "values": [
+        {"v": "清水暁"},
+      ],
+    },
+    {
+      "key": "脚本",
+      "values": [
+        {"v": "吉田恵里香"},
+      ],
+    },
+    {
+      "key": "分镜",
+      "values": [
+        {
+          "v":
+              "斎藤圭一郎(1,2,8,12)、山本ゆうすけ(3,11)、刈谷暢秀(4)、川上雄介(5,10)、藤原佳幸(6)、アマタジャンチキ[石井俊匡](7)、平峯義大(9)",
+        },
+      ],
+    },
+    {
+      "key": "演出",
+      "values": [
+        {
+          "v":
+              "斎藤圭一郎(1,12)、藤原佳幸(2,6,10)、山本ゆうすけ(3,11)、刈谷暢秀(4)、川上雄介(5,10)、篠原啓輔(7)、瀬尾健(8)、平峯義大(9)",
+        },
+      ],
+    },
+    {
+      "key": "作画监督",
+      "values": [
+        {
+          "v":
+              "けろりら(OP,1,4,6-8,10,12)、助川裕彦(2,11)、中村颯(3)、Maring Song(4,10)、高橋沙妃(5,10)、冨田真理(6)、朴世英(7)、石田一将(7)、川妻智美(7)、Franziska van Wulfen(8)、TOMATO(8)、伊藤弘樹(9)、きーくん[杉本龍彦](10)、スズキハルカ(ED)",
+        },
+      ],
+    },
+    {
+      "key": "主动画师",
+      "values": [
+        {"v": "LIVE动画师：伊藤優希"},
+      ],
+    },
+    {
+      "key": "作画监督助理",
+      "values": [
+        {"v": "森川侑紀、安野将人、山崎淳、中村颯、高橋沙妃、けろりら、冨田真理、刈谷暢秀、瀬尾健、平峯義大、伊藤弘樹"},
+      ],
+    },
+    {
+      "key": "演出助理",
+      "values": [
+        {"v": "山本ゆうすけ、篠原啓輔"},
+      ],
+    },
+    {
+      "key": "协力",
+      "values": [
+        {"v": "瀬古口拓也"},
+      ],
+    },
+    {
+      "key": "制作管理助理",
+      "values": [
+        {"v": "染野翔"},
+      ],
+    },
+  ],
+  "info": "12话 / 2022年10月8日 / 斎藤圭一郎 / はまじあき（芳文社「まんがタイムきららMAX」連載中） / けろりら",
+  "metaTags": ["TV", "日本", "漫画改", "音乐", "日常"],
+  "locked": false,
+  "name": "ぼっち・ざ・ろっく！",
+  "nameCN": "孤独摇滚！",
+  "nsfw": false,
+  "platform": {
+    "id": 1,
+    "type": "TV",
+    "typeCN": "TV",
+    "alias": "tv",
+    "order": 0,
+    "enableHeader": true,
+    "wikiTpl": "TVAnime",
+  },
+  "rating": {
+    "rank": 72,
+    "count": [195, 49, 48, 107, 358, 1355, 4974, 13792, 12148, 6737],
+    "score": 8.37,
+    "total": 39763,
+  },
+  "redirect": 0,
+  "series": false,
+  "seriesEntry": 0,
+  "summary":
+      "作为网络吉他手“吉他英雄”而广受好评的后藤一里，在现实中却是个什么都不会的沟通障碍者。一里有着组建乐队的梦想，但因为不敢向人主动搭话而一直没有成功，直到一天在公园中被伊地知虹夏发现并邀请进入缺少吉他手的“结束乐队”。可是，完全没有和他人合作经历的一里，在人前完全发挥不出原本的实力。为了努力克服沟通障碍，一里与“结束乐队”的成员们一同开始努力……",
+  "type": 2,
+  "volumes": 0,
+  "tags": [
+    {"name": "芳文社", "count": 10693},
+    {"name": "音乐", "count": 8922},
+    {"name": "轻百合", "count": 7091},
+    {"name": "CloverWorks", "count": 6955},
+    {"name": "日常", "count": 6587},
+    {"name": "漫画改", "count": 4602},
+    {"name": "乐队题材", "count": 4494},
+    {"name": "2022年10月", "count": 4450},
+    {"name": "搞笑", "count": 3092},
+    {"name": "TV", "count": 3044},
+    {"name": "百合", "count": 2159},
+    {"name": "2022", "count": 1793},
+    {"name": "斎藤圭一郎", "count": 1500},
+    {"name": "漫改", "count": 1482},
+    {"name": "乐队", "count": 876},
+    {"name": "日本", "count": 656},
+    {"name": "梅原翔太", "count": 478},
+    {"name": "校园", "count": 239},
+    {"name": "斋藤圭一郎", "count": 211},
+    {"name": "青春", "count": 185},
+    {"name": "治愈", "count": 159},
+    {"name": "神作", "count": 88},
+    {"name": "萌", "count": 88},
+    {"name": "孤独摇滚", "count": 79},
+    {"name": "社恐", "count": 78},
+    {"name": "少女乐队", "count": 76},
+    {"name": "轻百", "count": 67},
+    {"name": "摇滚", "count": 57},
+    {"name": "2022年", "count": 55},
+    {"name": "成长", "count": 36},
+  ],
+  "images": {
+    "large": "https://lain.bgm.tv/pic/cover/l/e2/e7/328609_2EHLJ.jpg",
+    "common": "https://lain.bgm.tv/r/400/pic/cover/l/e2/e7/328609_2EHLJ.jpg",
+    "medium": "https://lain.bgm.tv/r/200/pic/cover/l/e2/e7/328609_2EHLJ.jpg",
+    "small": "https://lain.bgm.tv/r/100/pic/cover/l/e2/e7/328609_2EHLJ.jpg",
+    "grid": "https://lain.bgm.tv/r/100x100/pic/cover/l/e2/e7/328609_2EHLJ.jpg",
+  },
+  "interest": {
+    "id": 51009576,
+    "rate": 0,
+    "type": 3,
+    "comment": "",
+    "tags": [],
+    "epStatus": 12,
+    "volStatus": 0,
+    "private": false,
+    "updatedAt": 1781020303,
+  },
+};

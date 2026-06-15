@@ -224,6 +224,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.8"
+  ratings_plus:
+    dependency: "direct main"
+    description:
+      name: ratings_plus
+      sha256: "6d9f5ffa5e874c2fb1fc9ebcb44d43d3307ba082deb7b75b41d512bb8acbf99c"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.0"
   screen_retriever:
     dependency: transitive
     description:
@@ -367,4 +375,4 @@ packages:
     version: "0.5.1"
 sdks:
   dart: ">=3.12.1 <4.0.0"
-  flutter: ">=3.38.1"
+  flutter: ">=3.38.5"

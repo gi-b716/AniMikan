@@ -1,8 +1,12 @@
+import 'package:animikan/models/subject.dart';
+import 'package:animikan/widgets/subject_card.dart';
 import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
 import 'utils/platform.dart';
 import 'config.dart';
 import 'theme.dart';
+
+import 'package:ratings_plus/ratings_plus.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -94,6 +98,12 @@ class _AppShellState extends State<AppShell> with WindowListener {
       label: '缓存',
     ),
     _TabConfig(
+      pageBuilder: _buildTest,
+      icon: Icons.developer_board,
+      selectedIcon: Icons.developer_board_outlined,
+      label: '测试',
+    ),
+    _TabConfig(
       pageBuilder: _buildSettings,
       icon: Icons.settings_outlined,
       selectedIcon: Icons.settings,
@@ -106,6 +116,13 @@ class _AppShellState extends State<AppShell> with WindowListener {
   static Widget _buildFavourites(BuildContext _) =>
       const Center(child: Text('收藏'));
   static Widget _buildCache(BuildContext _) => const Center(child: Text('缓存'));
+  static Widget _buildTest(BuildContext _) => Center(
+    child: SubjectCard(
+      subject: SlimSubject.fromJson(testSubject),
+      watchers: 12040,
+      onTap: () {},
+    ),
+  );
   static Widget _buildSettings(BuildContext _) =>
       const Center(child: Text('设置'));
 
@@ -159,16 +176,10 @@ class _AppShellState extends State<AppShell> with WindowListener {
                   children: [
                     Column(
                       children: [
-                        if (desktop) _buildTitleBar(),
+                        if (desktop) _buildTitleBar(withButtons: true),
                         Expanded(child: _buildPage()),
                       ],
                     ),
-                    if (desktop)
-                      Positioned(
-                        top: 0,
-                        right: 0,
-                        child: _WindowButtons(isMaximized: _isMaximized),
-                      ),
                   ],
                 ),
               ),

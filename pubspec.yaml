@@ -12,6 +12,7 @@ dependencies:
   dio: ^5.9.2
   package_info_plus: ^10.1.0
   window_manager: ^0.5.1
+  ratings_plus: ^1.0.0
 
 dev_dependencies:
   flutter_test:
