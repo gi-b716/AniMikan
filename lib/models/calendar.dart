@@ -29,6 +29,8 @@ enum WeekDay {
     WeekDay.saturday => '星期六',
     WeekDay.sunday => '星期日',
   };
+
+  static WeekDay get today => fromValue(DateTime.now().weekday);
 }
 
 class CalendarSubject {

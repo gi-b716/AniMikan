@@ -47,7 +47,7 @@ class SubjectCard extends StatelessWidget {
                     children: [
                       Text(
                         subject.displayName,
-                        maxLines: 2,
+                        maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: text.titleMedium?.copyWith(
                           fontWeight: FontWeight.w600,
@@ -78,7 +78,7 @@ class SubjectCard extends StatelessWidget {
                           padding: const EdgeInsets.only(bottom: 4),
                           child: Text(
                             _extractInfo(subject.info),
-                            maxLines: 3,
+                            maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                             style: text.bodySmall?.copyWith(
                               color: colors.outline,
@@ -104,41 +104,41 @@ class SubjectCard extends StatelessWidget {
                             ],
                           ),
                         ),
-                      const SizedBox(height: 4),
 
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Text(
-                            subject.rating.score.toStringAsFixed(1),
-                            style: text.headlineSmall?.copyWith(
-                              color: colors.primary,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 3),
-                            child: RatingBarIndicator(
-                              value: subject.rating.score / 2.0,
-                              itemCount: 5,
-                              itemSize: 14.0,
-                              itemBuilder: (context, _) =>
-                                  Icon(Icons.star, color: colors.primary),
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 3),
-                            child: Text(
-                              '${_formatCount(subject.rating.total)}人',
-                              style: text.labelSmall?.copyWith(
-                                color: colors.outline,
+                      if (subject.rating.total > 0)
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text(
+                              subject.rating.score.toStringAsFixed(1),
+                              style: text.headlineSmall?.copyWith(
+                                color: colors.primary,
+                                fontWeight: FontWeight.bold,
                               ),
                             ),
-                          ),
-                        ],
-                      ),
+                            const SizedBox(width: 8),
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 3),
+                              child: RatingBarIndicator(
+                                value: subject.rating.score / 2.0,
+                                itemCount: 5,
+                                itemSize: 14.0,
+                                itemBuilder: (context, _) =>
+                                    Icon(Icons.star, color: colors.primary),
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 3),
+                              child: Text(
+                                '${_formatCount(subject.rating.total)}人',
+                                style: text.labelSmall?.copyWith(
+                                  color: colors.outline,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                     ],
                   ),
                 ),
