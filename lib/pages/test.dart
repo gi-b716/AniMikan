@@ -2,9 +2,9 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-import '../main.dart';
-import '../models/subject.dart';
-import '../widgets/subject_card.dart';
+import 'package:animikan/main.dart';
+import 'package:animikan/models/subject.dart';
+import 'package:animikan/widgets/subject_card.dart';
 
 class TestPage extends StatefulWidget {
   const TestPage({super.key});

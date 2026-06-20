@@ -1,7 +1,8 @@
-import 'package:animikan/models/calendar.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
-import '../config.dart';
+
+import 'package:animikan/config.dart';
+import 'package:animikan/models/calendar.dart';
 
 class BangumiException implements Exception {
   final String message;

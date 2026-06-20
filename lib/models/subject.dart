@@ -1,4 +1,4 @@
-import '../utils/validation.dart';
+import 'package:animikan/utils/validation.dart';
 
 enum CollectionType {
   wish(1),

@@ -1,10 +1,11 @@
 import 'dart:async';
+
+import 'package:flutter/material.dart';
+
+import 'package:animikan/main.dart';
 import 'package:animikan/models/calendar.dart';
 import 'package:animikan/services/bangumi.dart';
 import 'package:animikan/widgets/subject_card.dart';
-import 'package:flutter/material.dart';
-
-import '../main.dart';
 
 int _isoWeekNumber(DateTime date) {
   final thursday = date.add(Duration(days: 3 - ((date.weekday + 5) % 7)));

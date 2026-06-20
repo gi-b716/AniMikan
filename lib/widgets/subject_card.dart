@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:ratings_plus/ratings_plus.dart';
-import '../models/subject.dart';
+
+import 'package:animikan/models/subject.dart';
 
 class SubjectCard extends StatelessWidget {
   final SlimSubject subject;

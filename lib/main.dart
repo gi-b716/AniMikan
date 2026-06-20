@@ -1,10 +1,11 @@
-import 'package:animikan/pages/calendar.dart';
-import 'package:animikan/pages/test.dart';
 import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
-import 'utils/platform.dart';
-import 'config.dart';
-import 'theme.dart';
+
+import 'package:animikan/config.dart';
+import 'package:animikan/pages/calendar.dart';
+import 'package:animikan/pages/test.dart';
+import 'package:animikan/theme.dart';
+import 'package:animikan/utils/platform.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

@@ -1,5 +1,5 @@
-import '../utils/validation.dart';
-import 'subject.dart';
+import 'package:animikan/models/subject.dart';
+import 'package:animikan/utils/validation.dart';
 
 enum WeekDay {
   monday(1),
