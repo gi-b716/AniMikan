@@ -205,10 +205,22 @@ class _CalendarPageState extends State<CalendarPage> {
             const SizedBox(height: 12),
             Text('加载失败', style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 4),
-            Text(
-              _error!,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(context).colorScheme.outline,
+            Container(
+              constraints: const BoxConstraints(maxHeight: 200, maxWidth: 500),
+              width: 500,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: SingleChildScrollView(
+                child: Text(
+                  _error!,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    fontFamily: 'monospace',
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
               ),
             ),
             const SizedBox(height: 16),
