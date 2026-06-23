@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-import 'package:animikan/main.dart';
+import 'package:animikan/widgets/app_shell.dart';
 import 'package:animikan/models/calendar.dart';
 import 'package:animikan/services/bangumi.dart';
 import 'package:animikan/widgets/subject_card.dart';
@@ -18,22 +18,6 @@ const double _kCardHeight = 175; // SubjectCard fixed height
 const double _kRowSpacing = 12; // _ItemGrid runSpacing
 const double _kHeaderHeight = 44; // _SectionHeader approx height
 const double _kSectionGap = 24; // 8 (before grid) + 16 (after grid)
-
-/*
-class CalendarPage extends StatelessWidget {
-  const CalendarPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final now = DateTime.now();
-    final title = '${now.year}年第${_isoWeekNumber(now)}周放送时间表';
-
-    AppShellScope.setTitle(context, title);
-
-    return Center(child: Text(title));
-  }
-}
-*/
 
 class CalendarPage extends StatefulWidget {
   const CalendarPage({super.key});
@@ -204,7 +188,7 @@ class _CalendarPageState extends State<CalendarPage> {
             ),
             const SizedBox(height: 12),
             Text('加载失败', style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 4),
+            const SizedBox(height: 12),
             Container(
               constraints: const BoxConstraints(maxHeight: 200, maxWidth: 500),
               width: 500,
