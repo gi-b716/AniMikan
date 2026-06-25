@@ -281,6 +281,7 @@ class _AppShellState extends State<AppShell> with WindowListener {
   int _index = 0;
   late bool _isMaximized;
   late bool _isDesktop;
+  late final List<GlobalKey> _tabNavigatorKeys;
   String? _customTitle;
   VoidCallback? _onBack;
 
@@ -305,6 +306,10 @@ class _AppShellState extends State<AppShell> with WindowListener {
     super.initState();
     _isMaximized = widget.initialIsMaximized;
     _isDesktop = isDesktop();
+    _tabNavigatorKeys = List.generate(
+      widget.tabs.length,
+      (_) => GlobalKey(debugLabel: 'tabNavigator'),
+    );
     if (_isDesktop) {
       windowManager.addListener(this);
     }
@@ -330,13 +335,14 @@ class _AppShellState extends State<AppShell> with WindowListener {
 
   @override
   Widget build(BuildContext context) {
+    final page = _buildPage();
     return OrientationBuilder(
       builder: (context, orientation) =>
-          orientation == Orientation.landscape ? _wide() : _narrow(),
+          orientation == Orientation.landscape ? _wide(page) : _narrow(page),
     );
   }
 
-  Widget _wide() {
+  Widget _wide(Widget page) {
     final ColorScheme colors = Theme.of(context).colorScheme;
 
     return Scaffold(
@@ -374,7 +380,7 @@ class _AppShellState extends State<AppShell> with WindowListener {
               child: Column(
                 children: [
                   _buildTopBar(),
-                  Expanded(child: _buildPage()),
+                  Expanded(child: page),
                 ],
               ),
             ),
@@ -384,12 +390,12 @@ class _AppShellState extends State<AppShell> with WindowListener {
     );
   }
 
-  Widget _narrow() {
+  Widget _narrow(Widget page) {
     return Scaffold(
       body: Column(
         children: [
           _buildTopBar(),
-          Expanded(child: _buildPage()),
+          Expanded(child: page),
         ],
       ),
       bottomNavigationBar: NavigationBar(
@@ -466,7 +472,10 @@ class _AppShellState extends State<AppShell> with WindowListener {
           for (final (i, tab) in widget.tabs.indexed)
             TabIndexScope(
               index: i,
-              child: TabNavigator(builder: tab.pageBuilder),
+              child: TabNavigator(
+                key: _tabNavigatorKeys[i],
+                builder: tab.pageBuilder,
+              ),
             ),
         ],
       ),
