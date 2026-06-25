@@ -43,7 +43,11 @@ class MainApp extends StatelessWidget {
       theme: AppTheme.of(Brightness.light),
       darkTheme: AppTheme.of(Brightness.dark),
       themeMode: ThemeMode.system,
-      home: AppShell(initialIsMaximized: isMaximized, tabs: _tabs),
+      home: AppShell(
+        initialIsMaximized: isMaximized,
+        tabs: _tabs,
+        onSearchPressed: _onSearchPressed,
+      ),
     );
   }
 }
@@ -54,7 +58,12 @@ Widget _buildCache(BuildContext _) => const Center(child: Text('缓存'));
 Widget _buildTest(BuildContext _) => const TestPage();
 Widget _buildSettings(BuildContext _) => const Center(child: Text('设置'));
 
-const _tabs = <TabConfig>[
+void _onSearchPressed() {
+  // TODO: implement search
+  throw UnimplementedError();
+}
+
+final _tabs = <TabConfig>[
   TabConfig(
     pageBuilder: _buildCalendar,
     icon: Icons.calendar_month_outlined,

@@ -8,25 +8,24 @@ class TabConfig {
   final IconData icon;
   final IconData selectedIcon;
   final String label;
+  final NavigationRailDestination rail;
+  final NavigationDestination bar;
 
-  const TabConfig({
+  TabConfig({
     required this.pageBuilder,
     required this.icon,
     required this.selectedIcon,
     required this.label,
-  });
-
-  NavigationRailDestination get rail => NavigationRailDestination(
-    icon: Icon(icon),
-    selectedIcon: Icon(selectedIcon),
-    label: Text(label),
-  );
-
-  NavigationDestination get bar => NavigationDestination(
-    icon: Icon(icon),
-    selectedIcon: Icon(selectedIcon),
-    label: label,
-  );
+  }) : rail = NavigationRailDestination(
+         icon: Icon(icon),
+         selectedIcon: Icon(selectedIcon),
+         label: Text(label),
+       ),
+       bar = NavigationDestination(
+         icon: Icon(icon),
+         selectedIcon: Icon(selectedIcon),
+         label: label,
+       );
 }
 
 class AppShellScope extends InheritedWidget {
@@ -44,20 +43,23 @@ class AppShellScope extends InheritedWidget {
     required super.child,
   });
 
+  static AppShellScope? maybeOf(BuildContext context) {
+    return context.dependOnInheritedWidgetOfExactType<AppShellScope>();
+  }
+
   static AppShellScope of(BuildContext context) {
-    final result = context.dependOnInheritedWidgetOfExactType<AppShellScope>();
+    final result = maybeOf(context);
     assert(result != null, 'No AppShellScope found in context');
     return result!;
   }
 
   static void setTitle(BuildContext context, String title) {
-    final scope = of(context);
-    final index = TabIndexScope.of(context);
-    if (index != scope.activeIndex) return;
-
+    final scope = maybeOf(context);
+    if (scope == null) return;
+    final index = TabIndexScope.maybeOf(context);
+    if (index == null || index != scope.activeIndex) return;
     final route = ModalRoute.of(context);
     if (route != null && !route.isCurrent) return;
-
     scope.notifyTitle(title);
   }
 
@@ -78,6 +80,10 @@ class TabIndexScope extends InheritedWidget {
     final scope = context.dependOnInheritedWidgetOfExactType<TabIndexScope>();
     assert(scope != null, 'No TabIndexScope found in context');
     return scope!.index;
+  }
+
+  static int? maybeOf(BuildContext context) {
+    return context.dependOnInheritedWidgetOfExactType<TabIndexScope>()?.index;
   }
 
   @override
@@ -127,6 +133,7 @@ class _TabNavigatorState extends State<TabNavigator> {
 
   @override
   Widget build(BuildContext context) {
+    _deferSyncBack();
     return Navigator(
       key: _navigatorKey,
       observers: [_observer],
@@ -255,11 +262,13 @@ class _TitleBarButtonState extends State<_TitleBarButton> {
 class AppShell extends StatefulWidget {
   final bool initialIsMaximized;
   final List<TabConfig> tabs;
+  final VoidCallback? onSearchPressed;
 
   const AppShell({
     super.key,
     this.initialIsMaximized = false,
     required this.tabs,
+    this.onSearchPressed,
   });
 
   @override
@@ -268,10 +277,10 @@ class AppShell extends StatefulWidget {
 
 class _AppShellState extends State<AppShell> with WindowListener {
   static const double _kTitleBarHeight = 38.0;
-  static const double _kBackButtonSize = 38.0;
 
   int _index = 0;
   late bool _isMaximized;
+  late bool _isDesktop;
   String? _customTitle;
   VoidCallback? _onBack;
 
@@ -295,14 +304,15 @@ class _AppShellState extends State<AppShell> with WindowListener {
   void initState() {
     super.initState();
     _isMaximized = widget.initialIsMaximized;
-    if (isDesktop()) {
+    _isDesktop = isDesktop();
+    if (_isDesktop) {
       windowManager.addListener(this);
     }
   }
 
   @override
   void dispose() {
-    if (isDesktop()) windowManager.removeListener(this);
+    if (_isDesktop) windowManager.removeListener(this);
     super.dispose();
   }
 
@@ -328,7 +338,6 @@ class _AppShellState extends State<AppShell> with WindowListener {
 
   Widget _wide() {
     final ColorScheme colors = Theme.of(context).colorScheme;
-    final bool desktop = isDesktop();
 
     return Scaffold(
       backgroundColor: colors.surfaceContainerHigh,
@@ -348,27 +357,25 @@ class _AppShellState extends State<AppShell> with WindowListener {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14),
                 ),
-                onPressed: () {},
+                onPressed: widget.onSearchPressed,
                 child: const Icon(Icons.search, size: 28),
               ),
             ),
             destinations: [for (final t in widget.tabs) t.rail],
           ),
           Expanded(
-            child: ClipRRect(
+            child: Material(
+              color: colors.surfaceContainer,
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(16.0),
                 bottomLeft: Radius.circular(16.0),
               ),
-              child: ColoredBox(
-                color: colors.surfaceContainer,
-                child: Column(
-                  children: [
-                    if (desktop) _buildTitleBar(withButtons: true),
-                    if (!desktop && _onBack != null) _buildBackBar(),
-                    Expanded(child: _buildPage()),
-                  ],
-                ),
+              clipBehavior: Clip.antiAlias,
+              child: Column(
+                children: [
+                  _buildTopBar(),
+                  Expanded(child: _buildPage()),
+                ],
               ),
             ),
           ),
@@ -378,13 +385,10 @@ class _AppShellState extends State<AppShell> with WindowListener {
   }
 
   Widget _narrow() {
-    final bool desktop = isDesktop();
-
     return Scaffold(
       body: Column(
         children: [
-          if (desktop) _buildTitleBar(withButtons: true),
-          if (!desktop && _onBack != null) _buildBackBar(),
+          _buildTopBar(),
           Expanded(child: _buildPage()),
         ],
       ),
@@ -403,7 +407,7 @@ class _AppShellState extends State<AppShell> with WindowListener {
       children: [
         if (canBack)
           SizedBox(
-            width: _kBackButtonSize,
+            width: _kTitleBarHeight,
             child: IconButton(
               icon: const Icon(Icons.arrow_back_rounded, size: 18),
               onPressed: _onBack,
@@ -425,25 +429,29 @@ class _AppShellState extends State<AppShell> with WindowListener {
     );
   }
 
-  Widget _buildTitleBar({bool withButtons = false}) {
-    return SizedBox(
-      height: _kTitleBarHeight,
-      child: Stack(
-        children: [
-          Positioned.fill(child: DragToMoveArea(child: _buildBackRow())),
-          if (withButtons)
+  Widget _buildTopBar() {
+    final hasBack = _onBack != null;
+    if (!hasBack && !_isDesktop) return const SizedBox.shrink();
+
+    final bar = SizedBox(height: _kTitleBarHeight, child: _buildBackRow());
+
+    if (_isDesktop) {
+      return SizedBox(
+        height: _kTitleBarHeight,
+        child: Stack(
+          children: [
+            Positioned.fill(child: DragToMoveArea(child: bar)),
             Positioned(
               top: 0,
               right: 0,
               child: _WindowButtons(isMaximized: _isMaximized),
             ),
-        ],
-      ),
-    );
-  }
+          ],
+        ),
+      );
+    }
 
-  Widget _buildBackBar() {
-    return SizedBox(height: _kTitleBarHeight, child: _buildBackRow());
+    return bar;
   }
 
   Widget _buildPage() {
