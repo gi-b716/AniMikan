@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-import 'package:animikan/widgets/app_shell.dart';
 import 'package:animikan/models/calendar.dart';
+import 'package:animikan/widgets/app_shell.dart';
 import 'package:animikan/services/bangumi.dart';
 import 'package:animikan/widgets/subject_card.dart';
 

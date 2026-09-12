@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:window_manager/window_manager.dart';
 
 import 'package:animikan/utils/platform.dart';
 
+final rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'rootNavigator');
+
 class TabConfig {
-  final WidgetBuilder pageBuilder;
+  final String location;
   final IconData icon;
   final IconData selectedIcon;
   final String label;
@@ -12,7 +15,7 @@ class TabConfig {
   final NavigationDestination bar;
 
   TabConfig({
-    required this.pageBuilder,
+    required this.location,
     required this.icon,
     required this.selectedIcon,
     required this.label,
@@ -29,17 +32,13 @@ class TabConfig {
 }
 
 class AppShellScope extends InheritedWidget {
-  final void Function(String) notifyTitle;
-  final VoidCallback? onBack;
-  final void Function(VoidCallback?)? setOnBack;
-  final int activeIndex;
+  final void Function(String title, bool canPop) sync;
+  final String activeLocation;
 
   const AppShellScope({
     super.key,
-    required this.notifyTitle,
-    required this.onBack,
-    required this.setOnBack,
-    required this.activeIndex,
+    required this.sync,
+    required this.activeLocation,
     required super.child,
   });
 
@@ -47,166 +46,61 @@ class AppShellScope extends InheritedWidget {
     return context.dependOnInheritedWidgetOfExactType<AppShellScope>();
   }
 
-  static AppShellScope of(BuildContext context) {
-    final result = maybeOf(context);
-    assert(result != null, 'No AppShellScope found in context');
-    return result!;
-  }
-
   static void setTitle(BuildContext context, String title) {
     final scope = maybeOf(context);
     if (scope == null) return;
-    final index = TabIndexScope.maybeOf(context);
-    if (index == null || index != scope.activeIndex) return;
+
+    final location = GoRouterState.of(context).matchedLocation;
+    if (location != scope.activeLocation &&
+        !location.startsWith('${scope.activeLocation}/')) {
+      return;
+    }
+
     final route = ModalRoute.of(context);
     if (route != null && !route.isCurrent) return;
-    scope.notifyTitle(title);
+    scope.sync(title, GoRouter.of(context).canPop());
   }
 
   @override
   bool updateShouldNotify(AppShellScope oldWidget) =>
-      notifyTitle != oldWidget.notifyTitle ||
-      setOnBack != oldWidget.setOnBack ||
-      onBack != oldWidget.onBack ||
-      activeIndex != oldWidget.activeIndex;
-}
-
-class TabIndexScope extends InheritedWidget {
-  final int index;
-
-  const TabIndexScope({super.key, required this.index, required super.child});
-
-  static int of(BuildContext context) {
-    final scope = context.dependOnInheritedWidgetOfExactType<TabIndexScope>();
-    assert(scope != null, 'No TabIndexScope found in context');
-    return scope!.index;
-  }
-
-  static int? maybeOf(BuildContext context) {
-    return context.dependOnInheritedWidgetOfExactType<TabIndexScope>()?.index;
-  }
-
-  @override
-  bool updateShouldNotify(TabIndexScope oldWidget) => index != oldWidget.index;
-}
-
-/// Wraps a tab page in its own [Navigator] so the page can push/pop
-/// sub-pages independently. Use one per tab inside the [IndexedStack].
-class TabNavigator extends StatefulWidget {
-  final WidgetBuilder builder;
-
-  const TabNavigator({super.key, required this.builder});
-
-  @override
-  State<TabNavigator> createState() => _TabNavigatorState();
-}
-
-class _TabNavigatorState extends State<TabNavigator> {
-  final _navigatorKey = GlobalKey<NavigatorState>();
-
-  void _syncBack() {
-    if (!mounted) return;
-    final scope = context.findAncestorWidgetOfExactType<AppShellScope>();
-    final tabScope = context.findAncestorWidgetOfExactType<TabIndexScope>();
-    if (scope == null || tabScope == null) return;
-    if (tabScope.index != scope.activeIndex) return;
-
-    final nav = _navigatorKey.currentState;
-    if (nav != null && nav.canPop()) {
-      scope.setOnBack?.call(() => nav.pop());
-    } else {
-      scope.setOnBack?.call(null);
-    }
-  }
-
-  void _deferSyncBack() {
-    WidgetsBinding.instance.addPostFrameCallback((_) => _syncBack());
-  }
-
-  late final _NavObserver _observer = _NavObserver(_deferSyncBack);
-
-  @override
-  void initState() {
-    super.initState();
-    _deferSyncBack();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    _deferSyncBack();
-    return Navigator(
-      key: _navigatorKey,
-      observers: [_observer],
-      onGenerateInitialRoutes: (navigator, initialRoute) => [
-        MaterialPageRoute(builder: widget.builder),
-      ],
-    );
-  }
-}
-
-class _NavObserver extends NavigatorObserver {
-  final VoidCallback onChanged;
-
-  _NavObserver(this.onChanged);
-
-  @override
-  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) =>
-      onChanged();
-
-  @override
-  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) =>
-      onChanged();
-
-  @override
-  void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) =>
-      onChanged();
-
-  @override
-  void didRemove(Route<dynamic> route, Route<dynamic>? previousRoute) =>
-      onChanged();
+      sync != oldWidget.sync || activeLocation != oldWidget.activeLocation;
 }
 
 class _WindowButtons extends StatelessWidget {
   final bool isMaximized;
-
   const _WindowButtons({required this.isMaximized});
 
   @override
   Widget build(BuildContext context) {
-    final ColorScheme colors = Theme.of(context).colorScheme;
-    const double iconSize = 14.0;
-    final Color iconColor = colors.onSurface;
-    final Color hoverBg = colors.onSurface.withValues(alpha: 0.1);
-
+    final cs = Theme.of(context).colorScheme;
+    const sz = 14.0;
+    final c = cs.onSurface;
+    final h = cs.onSurface.withValues(alpha: 0.1);
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         _TitleBarButton(
           icon: Icons.horizontal_rule_rounded,
-          size: iconSize,
-          color: iconColor,
-          hoverColor: hoverBg,
+          size: sz,
+          color: c,
+          hoverColor: h,
           onPressed: () => windowManager.minimize(),
         ),
         _TitleBarButton(
           icon: isMaximized
               ? Icons.filter_none_rounded
               : Icons.crop_square_rounded,
-          size: iconSize + 2,
-          color: iconColor,
-          hoverColor: hoverBg,
-          onPressed: () {
-            if (isMaximized) {
-              windowManager.unmaximize();
-            } else {
-              windowManager.maximize();
-            }
-          },
+          size: sz + 2,
+          color: c,
+          hoverColor: h,
+          onPressed: () => isMaximized
+              ? windowManager.unmaximize()
+              : windowManager.maximize(),
         ),
         _TitleBarButton(
           icon: Icons.close_rounded,
-          size: iconSize + 2,
-          color: iconColor,
+          size: sz + 2,
+          color: c,
           hoverColor: const Color(0xFFC42B1C),
           onPressed: () => windowManager.close(),
         ),
@@ -221,7 +115,6 @@ class _TitleBarButton extends StatefulWidget {
   final Color color;
   final VoidCallback onPressed;
   final Color hoverColor;
-
   const _TitleBarButton({
     required this.icon,
     required this.size,
@@ -229,45 +122,43 @@ class _TitleBarButton extends StatefulWidget {
     required this.onPressed,
     required this.hoverColor,
   });
-
   @override
   State<_TitleBarButton> createState() => _TitleBarButtonState();
 }
 
 class _TitleBarButtonState extends State<_TitleBarButton> {
-  bool _isHovered = false;
-
+  bool _h = false;
   @override
-  Widget build(BuildContext context) {
-    return MouseRegion(
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() => _isHovered = false),
-      child: Container(
-        width: 38,
-        height: 38,
-        color: _isHovered ? widget.hoverColor : Colors.transparent,
-        child: InkWell(
-          onTap: widget.onPressed,
-          splashColor: Colors.transparent,
-          highlightColor: Colors.transparent,
-          child: Center(
-            child: Icon(widget.icon, size: widget.size, color: widget.color),
-          ),
+  Widget build(BuildContext context) => MouseRegion(
+    onEnter: (_) => setState(() => _h = true),
+    onExit: (_) => setState(() => _h = false),
+    child: Container(
+      width: 38,
+      height: 38,
+      color: _h ? widget.hoverColor : Colors.transparent,
+      child: InkWell(
+        onTap: widget.onPressed,
+        splashColor: Colors.transparent,
+        highlightColor: Colors.transparent,
+        child: Center(
+          child: Icon(widget.icon, size: widget.size, color: widget.color),
         ),
       ),
-    );
-  }
+    ),
+  );
 }
 
 class AppShell extends StatefulWidget {
-  final bool initialIsMaximized;
+  final StatefulNavigationShell navigationShell;
   final List<TabConfig> tabs;
+  final bool initialIsMaximized;
   final VoidCallback? onSearchPressed;
 
   const AppShell({
     super.key,
-    this.initialIsMaximized = false,
+    required this.navigationShell,
     required this.tabs,
+    this.initialIsMaximized = false,
     this.onSearchPressed,
   });
 
@@ -276,85 +167,81 @@ class AppShell extends StatefulWidget {
 }
 
 class _AppShellState extends State<AppShell> with WindowListener {
-  static const double _kTitleBarHeight = 38.0;
+  static const _barH = 38.0;
 
-  int _index = 0;
-  late bool _isMaximized;
-  late bool _isDesktop;
-  late final List<GlobalKey> _tabNavigatorKeys;
+  late bool _maximized;
+  late bool _desktop;
   String? _customTitle;
-  VoidCallback? _onBack;
+  bool _canPop = false;
 
-  String get _currentTitle => _customTitle ?? widget.tabs[_index].label;
+  int get _i => widget.navigationShell.currentIndex;
+  String get _currentTitle => _customTitle ?? widget.tabs[_i].label;
 
-  void setTitle(String title) {
+  void _syncTitle(String title, bool canPop) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_customTitle != title && mounted) {
-        setState(() => _customTitle = title);
-      }
-    });
-  }
-
-  void setOnBack(VoidCallback? cb) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_onBack != cb && mounted) setState(() => _onBack = cb);
+      if (!mounted) return;
+      if (_customTitle == title && _canPop == canPop) return;
+      setState(() {
+        _customTitle = title;
+        _canPop = canPop;
+      });
     });
   }
 
   @override
   void initState() {
     super.initState();
-    _isMaximized = widget.initialIsMaximized;
-    _isDesktop = isDesktop();
-    _tabNavigatorKeys = List.generate(
-      widget.tabs.length,
-      (_) => GlobalKey(debugLabel: 'tabNavigator'),
-    );
-    if (_isDesktop) {
-      windowManager.addListener(this);
-    }
+    _maximized = widget.initialIsMaximized;
+    _desktop = isDesktop();
+    if (_desktop) windowManager.addListener(this);
   }
 
   @override
   void dispose() {
-    if (_isDesktop) windowManager.removeListener(this);
+    if (_desktop) windowManager.removeListener(this);
     super.dispose();
   }
 
   @override
-  void onWindowMaximize() => setState(() => _isMaximized = true);
-
+  void onWindowMaximize() => setState(() => _maximized = true);
   @override
-  void onWindowUnmaximize() => setState(() => _isMaximized = false);
+  void onWindowUnmaximize() => setState(() => _maximized = false);
 
-  void _onSelect(int i) => setState(() {
-    _index = i;
-    _customTitle = null;
-    _onBack = null;
-  });
+  void _goBranch(int index) {
+    if (index != _i) {
+      setState(() {
+        _customTitle = null;
+        _canPop = false;
+      });
+    }
+    widget.navigationShell.goBranch(index, initialLocation: index == _i);
+  }
 
   @override
   Widget build(BuildContext context) {
-    final page = _buildPage();
+    final body = AppShellScope(
+      sync: _syncTitle,
+      activeLocation: widget.tabs[_i].location,
+      child: widget.navigationShell,
+    );
     return OrientationBuilder(
-      builder: (context, orientation) =>
-          orientation == Orientation.landscape ? _wide(page) : _narrow(page),
+      builder: (_, o) =>
+          o == Orientation.landscape ? _wide(body) : _narrow(body),
     );
   }
 
   Widget _wide(Widget page) {
-    final ColorScheme colors = Theme.of(context).colorScheme;
-
+    final cs = Theme.of(context).colorScheme;
     return Scaffold(
-      backgroundColor: colors.surfaceContainerHigh,
+      backgroundColor: cs.surfaceContainerHigh,
       body: Row(
         children: [
           NavigationRail(
-            selectedIndex: _index,
-            onDestinationSelected: _onSelect,
+            selectedIndex: _i,
+            onDestinationSelected: _goBranch,
             labelType: NavigationRailLabelType.selected,
             groupAlignment: 1.0,
-            backgroundColor: colors.surfaceContainerHigh,
+            backgroundColor: cs.surfaceContainerHigh,
             leading: Padding(
               padding: const EdgeInsets.only(top: 12, bottom: 24),
               child: FloatingActionButton(
@@ -371,15 +258,15 @@ class _AppShellState extends State<AppShell> with WindowListener {
           ),
           Expanded(
             child: Material(
-              color: colors.surfaceContainer,
+              color: cs.surfaceContainer,
               borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(16.0),
-                bottomLeft: Radius.circular(16.0),
+                topLeft: Radius.circular(16),
+                bottomLeft: Radius.circular(16),
               ),
               clipBehavior: Clip.antiAlias,
               child: Column(
                 children: [
-                  _buildTopBar(),
+                  _topBar(),
                   Expanded(child: page),
                 ],
               ),
@@ -390,44 +277,41 @@ class _AppShellState extends State<AppShell> with WindowListener {
     );
   }
 
-  Widget _narrow(Widget page) {
-    return Scaffold(
-      body: Column(
-        children: [
-          _buildTopBar(),
-          Expanded(child: page),
-        ],
-      ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _index,
-        onDestinationSelected: _onSelect,
-        destinations: [for (final t in widget.tabs) t.bar],
-      ),
-    );
-  }
+  Widget _narrow(Widget page) => Scaffold(
+    body: Column(
+      children: [
+        _topBar(),
+        Expanded(child: page),
+      ],
+    ),
+    bottomNavigationBar: NavigationBar(
+      selectedIndex: _i,
+      onDestinationSelected: _goBranch,
+      destinations: [for (final t in widget.tabs) t.bar],
+    ),
+  );
 
-  Widget _buildBackRow() {
-    final colors = Theme.of(context).colorScheme;
-    final canBack = _onBack != null;
+  Widget _backRow() {
+    final cs = Theme.of(context).colorScheme;
     return Row(
       children: [
-        if (canBack)
+        if (_canPop)
           SizedBox(
-            width: _kTitleBarHeight,
+            width: _barH,
             child: IconButton(
               icon: const Icon(Icons.arrow_back_rounded, size: 18),
-              onPressed: _onBack,
+              onPressed: () => GoRouter.of(context).pop(),
               padding: EdgeInsets.zero,
               splashRadius: 14,
-              color: colors.onSurface.withValues(alpha: 0.7),
+              color: cs.onSurface.withValues(alpha: 0.7),
             ),
           ),
-        SizedBox(width: canBack ? 4.0 : 16.0),
+        SizedBox(width: _canPop ? 4.0 : 16.0),
         Text(
           _currentTitle,
           style: TextStyle(
             fontSize: 13,
-            color: colors.onSurface.withValues(alpha: 0.7),
+            color: cs.onSurface.withValues(alpha: 0.7),
             fontWeight: FontWeight.w500,
           ),
         ),
@@ -435,48 +319,22 @@ class _AppShellState extends State<AppShell> with WindowListener {
     );
   }
 
-  Widget _buildTopBar() {
-    final hasBack = _onBack != null;
-    if (!hasBack && !_isDesktop) return const SizedBox.shrink();
+  Widget _topBar() {
+    if (!_canPop && !_desktop) return const SizedBox.shrink();
 
-    final bar = SizedBox(height: _kTitleBarHeight, child: _buildBackRow());
+    final bar = SizedBox(height: _barH, child: _backRow());
+    if (!_desktop) return bar;
 
-    if (_isDesktop) {
-      return SizedBox(
-        height: _kTitleBarHeight,
-        child: Stack(
-          children: [
-            Positioned.fill(child: DragToMoveArea(child: bar)),
-            Positioned(
-              top: 0,
-              right: 0,
-              child: _WindowButtons(isMaximized: _isMaximized),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return bar;
-  }
-
-  Widget _buildPage() {
-    return AppShellScope(
-      notifyTitle: setTitle,
-      onBack: _onBack,
-      setOnBack: setOnBack,
-      activeIndex: _index,
-      child: IndexedStack(
-        index: _index,
+    return SizedBox(
+      height: _barH,
+      child: Stack(
         children: [
-          for (final (i, tab) in widget.tabs.indexed)
-            TabIndexScope(
-              index: i,
-              child: TabNavigator(
-                key: _tabNavigatorKeys[i],
-                builder: tab.pageBuilder,
-              ),
-            ),
+          Positioned.fill(child: DragToMoveArea(child: bar)),
+          Positioned(
+            top: 0,
+            right: 0,
+            child: _WindowButtons(isMaximized: _maximized),
+          ),
         ],
       ),
     );
