@@ -93,7 +93,9 @@ class CalendarLayout {
 }
 
 class CalendarPage extends StatefulWidget {
-  const CalendarPage({super.key});
+  final BangumiClient? client;
+
+  const CalendarPage({super.key, this.client});
 
   @override
   State<CalendarPage> createState() => _CalendarPageState();
@@ -114,6 +116,8 @@ class _CalendarPageState extends State<CalendarPage> {
 
   CalendarLayout _layout = const CalendarLayout(columns: 1, itemCounts: {});
   bool _didSyncInitialDay = false;
+
+  BangumiClient get _client => widget.client ?? BangumiClient.instance;
 
   Map<WeekDay, int> get _itemCounts => {
     for (final day in WeekDay.values) day: _calendar?.weekMap[day]?.length ?? 0,
@@ -141,7 +145,7 @@ class _CalendarPageState extends State<CalendarPage> {
   Future<void> _refreshData() async {
     setState(() => _refreshing = true);
     try {
-      final cal = await BangumiClient().getCalendar();
+      final cal = await _client.getCalendar();
       if (!mounted) return;
       setState(() {
         _calendar = cal;
@@ -177,7 +181,7 @@ class _CalendarPageState extends State<CalendarPage> {
       _error = null;
     });
     try {
-      final cal = await BangumiClient().getCalendar();
+      final cal = await _client.getCalendar();
       if (!mounted) return;
       setState(() {
         _calendar = cal;

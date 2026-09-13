@@ -17,7 +17,13 @@ class BangumiException implements Exception {
 }
 
 class BangumiClient {
-  final Dio _nextDio = Dio(
+  static final BangumiClient instance = BangumiClient();
+
+  final Dio _dio;
+
+  BangumiClient({Dio? dio}) : _dio = dio ?? _createDio();
+
+  static Dio _createDio() => Dio(
     BaseOptions(
       baseUrl: BangumiConst.nextApi,
       connectTimeout: const Duration(seconds: 15),
@@ -31,14 +37,14 @@ class BangumiClient {
 
   Future<Calendar> getCalendar() async {
     try {
-      final resp = await _nextDio.get('/p1/calendar');
+      final resp = await _dio.get('/p1/calendar');
       return Calendar.fromJson(resp.data as Map<String, dynamic>);
     } on DioException catch (e) {
       throw BangumiException(
         e.message ?? 'Network request failed',
         statusCode: e.response?.statusCode,
       );
-    } on TypeError catch (e) {
+    } catch (e) {
       throw BangumiException('Unexpected response format: $e');
     }
   }
