@@ -258,7 +258,7 @@ class SubjectPlatform {
   factory SubjectPlatform.fromJson(Map<String, dynamic> json) =>
       SubjectPlatform(
         alias: rStr(json, 'alias'),
-        enableHeader: json['enableHeader'] as bool?,
+        enableHeader: oBool(json, 'enableHeader'),
         id: rInt(json, 'id'),
         order: oInt(json, 'order'),
         searchString: oStr(json, 'searchString'),
@@ -381,16 +381,16 @@ class Subject {
 
 class InfoboxItem {
   final String key;
-  final List<InfoboxValue> value;
+  final List<InfoboxValue> values;
 
-  const InfoboxItem({required this.key, required this.value});
+  const InfoboxItem({required this.key, required this.values});
 
   factory InfoboxItem.fromJson(Map<String, dynamic> json) => InfoboxItem(
     key: rStr(json, 'key'),
-    value:
+    values:
         oList(
           json,
-          'value',
+          'values',
           (e) => InfoboxValue.fromJson(e as Map<String, dynamic>),
         ) ??
         [],

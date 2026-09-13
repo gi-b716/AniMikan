@@ -110,9 +110,8 @@ GoRouter createRouter({required bool isMaximized, VoidCallback? onSearch}) {
           final subjectId = int.tryParse(
             state.pathParameters['subjectId'] ?? '',
           );
-          final subject = state.extra is SlimSubject
-              ? state.extra! as SlimSubject
-              : null;
+          final extra = state.extra;
+          final subject = extra is SlimSubject ? extra : null;
           return SubjectDetailPage(subjectId: subjectId, subject: subject);
         },
       ),

@@ -68,7 +68,7 @@ class SubjectCard extends StatelessWidget {
                           _TypeBadge(type: subject.type),
                           if ( /*true || */ subject.nsfw) ...[
                             const SizedBox(width: 6),
-                            _NsfwBadge(),
+                            const _NsfwBadge(),
                           ],
                           const Spacer(),
                           if (watchers != null) ...[
@@ -165,8 +165,7 @@ class SubjectCard extends StatelessWidget {
 
   static String _extractInfo(String info) {
     // format: 'xxx / xxx / xxx'
-    final parts = info.split(' / ');
-    return parts.join(' · ');
+    return info.replaceAll(' / ', ' · ');
   }
 }
 
@@ -236,6 +235,8 @@ class _TypeBadge extends StatelessWidget {
 }
 
 class _NsfwBadge extends StatelessWidget {
+  const _NsfwBadge();
+
   @override
   Widget build(BuildContext context) {
     return Container(
