@@ -4,6 +4,12 @@ import 'package:ratings_plus/ratings_plus.dart';
 import 'package:animikan/models/subject.dart';
 
 class SubjectCard extends StatelessWidget {
+  static const double _contentHeight = 175;
+
+  static const double _margin = 4;
+
+  static const double mainAxisExtent = _contentHeight + _margin * 2;
+
   final SlimSubject subject;
   final int? watchers;
   final VoidCallback? onTap;
@@ -30,12 +36,13 @@ class SubjectCard extends StatelessWidget {
     return Card(
       clipBehavior: Clip.antiAlias,
       elevation: 12,
+      margin: const EdgeInsets.all(_margin),
       color: colors.surfaceContainerHighest,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
         onTap: onTap,
         child: SizedBox(
-          height: 175,
+          height: _contentHeight,
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [

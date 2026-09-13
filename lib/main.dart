@@ -42,7 +42,7 @@ class MainApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp.router(
       title: 'AniMikan',
-      debugShowCheckedModeBanner: false,
+      debugShowCheckedModeBanner: true,
       theme: AppTheme.of(Brightness.light),
       darkTheme: AppTheme.of(Brightness.dark),
       themeMode: ThemeMode.system,

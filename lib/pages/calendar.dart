@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'package:animikan/models/calendar.dart';
@@ -14,10 +15,82 @@ int _isoWeekNumber(DateTime date) {
   return thursday.difference(week1Monday).inDays ~/ 7 + 1;
 }
 
-const double _kCardHeight = 175; // SubjectCard fixed height
-const double _kRowSpacing = 12; // _ItemGrid runSpacing
-const double _kHeaderHeight = 44; // _SectionHeader approx height
-const double _kSectionGap = 24; // 8 (before grid) + 16 (after grid)
+/// A scroll offset expressed as a day plus the distance from that day's header.
+///
+/// Used to keep the reader on the same spot when the grid is re-flowed into a
+/// different column count.
+class CalendarAnchor {
+  final WeekDay day;
+  final double intraDayOffset;
+
+  const CalendarAnchor(this.day, this.intraDayOffset);
+}
+
+/// Geometry of the calendar's scrollable content.
+class CalendarLayout {
+  const CalendarLayout({required this.columns, required this.itemCounts})
+    : assert(columns > 0);
+
+  final int columns;
+
+  final Map<WeekDay, int> itemCounts;
+
+  static const double cardExtent = SubjectCard.mainAxisExtent;
+  static const double gridSpacing = 12;
+  static const double headerExtent = 44;
+  static const double headerBodyGap = 8;
+  static const double emptyBodyExtent = 52;
+  static const double sectionGap = 16;
+  static const double contentTopPadding = 8;
+  static const double contentBottomPadding = 24;
+  static const double contentLeftPadding = 16;
+  static const double contentRightPadding = 56;
+
+  int _count(WeekDay day) => itemCounts[day] ?? 0;
+
+  int _rows(WeekDay day) => (_count(day) / columns).ceil();
+
+  double sectionExtent(WeekDay day) {
+    final rows = _rows(day);
+    final body = rows == 0
+        ? emptyBodyExtent
+        : rows * cardExtent + (rows - 1) * gridSpacing;
+    return headerExtent + headerBodyGap + body + sectionGap;
+  }
+
+  double dayOffset(WeekDay day) {
+    var offset = contentTopPadding;
+    for (final candidate in WeekDay.values) {
+      if (candidate == day) break;
+      offset += sectionExtent(candidate);
+    }
+    return offset;
+  }
+
+  WeekDay? stuckDay(double offset) {
+    WeekDay? stuck;
+    for (final day in WeekDay.values) {
+      if (dayOffset(day) <= offset) {
+        stuck = day;
+      } else {
+        break;
+      }
+    }
+    return stuck;
+  }
+
+  CalendarAnchor anchorForOffset(double offset) {
+    var start = contentTopPadding;
+    for (final day in WeekDay.values) {
+      final extent = sectionExtent(day);
+      if (offset < start + extent || day == WeekDay.sunday) {
+        return CalendarAnchor(day, offset - start);
+      }
+      start += extent;
+    }
+    return const CalendarAnchor(WeekDay.sunday, 0);
+  }
+}
 
 class CalendarPage extends StatefulWidget {
   const CalendarPage({super.key});
@@ -39,12 +112,15 @@ class _CalendarPageState extends State<CalendarPage> {
     WeekDay.today,
   );
 
-  int _currentCols = 1;
+  CalendarLayout _layout = const CalendarLayout(columns: 1, itemCounts: {});
+  bool _didSyncInitialDay = false;
 
-  static const _weekdayLabels = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+  Map<WeekDay, int> get _itemCounts => {
+    for (final day in WeekDay.values) day: _calendar?.weekMap[day]?.length ?? 0,
+  };
 
   static String _weekdayLabel(DateTime date) =>
-      _weekdayLabels[date.weekday - 1];
+      WeekDay.fromValue(date.weekday).shortLabel;
 
   static Duration _untilNextMidnight() {
     final now = DateTime.now();
@@ -117,38 +193,49 @@ class _CalendarPageState extends State<CalendarPage> {
     }
   }
 
-  Map<WeekDay, double> _computeDayOffsets(int cols) {
-    final map = <WeekDay, double>{};
-    double cursor = 0;
-    for (final d in WeekDay.values) {
-      map[d] = cursor;
-      final n = _calendar?.weekMap[d]?.length ?? 0;
-      if (n == 0) {
-        cursor += _kHeaderHeight + 52 + _kSectionGap;
-      } else {
-        final rows = (n / cols).ceil();
-        final gridH = rows * _kCardHeight + (rows - 1) * _kRowSpacing;
-        cursor += _kHeaderHeight + gridH + _kSectionGap;
-      }
-    }
-    return map;
+  void _scheduleColumnRestore(CalendarLayout next) {
+    if (!_scrollCtrl.hasClients) return;
+    final anchor = _layout.anchorForOffset(_scrollCtrl.offset);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_scrollCtrl.hasClients) return;
+      final target = next.dayOffset(anchor.day) + anchor.intraDayOffset;
+      _scrollCtrl.jumpTo(
+        target.clamp(
+          _scrollCtrl.position.minScrollExtent,
+          _scrollCtrl.position.maxScrollExtent,
+        ),
+      );
+      _onScroll();
+    });
+  }
+
+  void _scrollToDay(WeekDay day) {
+    if (!_scrollCtrl.hasClients) return;
+    final target = _layout
+        .dayOffset(day)
+        .clamp(
+          _scrollCtrl.position.minScrollExtent,
+          _scrollCtrl.position.maxScrollExtent,
+        );
+    _scrollCtrl.animateTo(
+      target,
+      duration: const Duration(milliseconds: 280),
+      curve: Curves.easeOutCubic,
+    );
+  }
+
+  void _syncInitialDay() {
+    if (!mounted || !_scrollCtrl.hasClients) return;
+    _onScroll();
+    setState(() {});
   }
 
   void _onScroll() {
     if (_calendar == null || !_scrollCtrl.hasClients) return;
-    final maxExt = _scrollCtrl.position.maxScrollExtent;
-    if (maxExt <= 0) return;
-
-    final offsets = _computeDayOffsets(_currentCols);
-    final pos = _scrollCtrl.offset;
-    WeekDay closest = WeekDay.values.first;
-    for (final d in WeekDay.values) {
-      if ((offsets[d] ?? 0) <= pos + 12) {
-        closest = d;
-      }
-    }
-    if (closest != _currentDayNotifier.value) {
-      _currentDayNotifier.value = closest;
+    final day = _layout.stuckDay(_scrollCtrl.offset) ?? WeekDay.monday;
+    if (day != _currentDayNotifier.value) {
+      _currentDayNotifier.value = day;
     }
   }
 
@@ -218,35 +305,144 @@ class _CalendarPageState extends State<CalendarPage> {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        _currentCols = _columnCount(constraints.maxWidth);
+        final columns = _columnCount(constraints.maxWidth);
+        final next = CalendarLayout(columns: columns, itemCounts: _itemCounts);
+        if (columns != _layout.columns) _scheduleColumnRestore(next);
+        _layout = next;
 
-        final avail =
-            constraints.maxWidth - 72; // ListView horizontal padding (16+56)
-        final gap = 12.0;
-        final itemW = (avail - gap * (_currentCols - 1)) / _currentCols;
+        if (!_didSyncInitialDay) {
+          _didSyncInitialDay = true;
+          WidgetsBinding.instance.addPostFrameCallback(
+            (_) => _syncInitialDay(),
+          );
+        }
 
-        return Stack(
-          children: [
-            ListView(
-              controller: _scrollCtrl,
-              padding: const EdgeInsets.fromLTRB(16, 8, 56, 24),
+        return ScrollConfiguration(
+          behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
+          child: Scrollbar(
+            controller: _scrollCtrl,
+            child: Stack(
               children: [
-                for (final d in WeekDay.values) ...[
-                  _SectionHeader(day: d, count: cal.weekMap[d]?.length ?? 0),
-                  const SizedBox(height: 8),
-                  _ItemGrid(
-                    items: cal.weekMap[d] ?? [],
-                    itemWidth: itemW,
-                    spacing: gap,
+                CustomScrollView(
+                  controller: _scrollCtrl,
+                  slivers: [
+                    const SliverToBoxAdapter(
+                      child: SizedBox(height: CalendarLayout.contentTopPadding),
+                    ),
+                    for (final day in WeekDay.values)
+                      ..._buildDaySlivers(day, cal, columns),
+                    const SliverToBoxAdapter(
+                      child: SizedBox(
+                        height: CalendarLayout.contentBottomPadding,
+                      ),
+                    ),
+                  ],
+                ),
+                _stickyHeader(cal),
+                Positioned(
+                  right: 8,
+                  top: 0,
+                  bottom: 0,
+                  child: _WeekDayIsland(
+                    currentDay: _currentDayNotifier,
+                    onSelected: _scrollToDay,
                   ),
-                  const SizedBox(height: 16),
-                ],
+                ),
               ],
             ),
-          ],
+          ),
         );
       },
     );
+  }
+
+  Widget _stickyHeader(Calendar calendar) {
+    return Positioned(
+      left: 0,
+      right: 0,
+      top: 0,
+      child: IgnorePointer(
+        child: ListenableBuilder(
+          listenable: _scrollCtrl,
+          builder: (context, _) {
+            if (!_scrollCtrl.hasClients) return const SizedBox.shrink();
+
+            final offset = _scrollCtrl.offset;
+            final stuck = _layout.stuckDay(offset);
+            if (stuck == null) return const SizedBox.shrink();
+
+            final next = stuck == WeekDay.sunday
+                ? null
+                : WeekDay.values[stuck.index + 1];
+            final push = next == null
+                ? 0.0
+                : _layout.dayOffset(next) -
+                      CalendarLayout.headerExtent -
+                      offset;
+
+            return Transform.translate(
+              offset: Offset(0, push < 0 ? push : 0),
+              child: _sectionHeaderBand(
+                stuck,
+                calendar.weekMap[stuck]?.length ?? 0,
+                background: Theme.of(context).colorScheme.surfaceContainer,
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _sectionHeaderBand(WeekDay day, int count, {Color? background}) {
+    final band = Padding(
+      padding: const EdgeInsets.only(
+        left: CalendarLayout.contentLeftPadding,
+        right: CalendarLayout.contentRightPadding,
+      ),
+      child: SizedBox(
+        height: CalendarLayout.headerExtent,
+        child: _SectionHeader(day: day, count: count),
+      ),
+    );
+    if (background == null) return band;
+    return Container(color: background, child: band);
+  }
+
+  List<Widget> _buildDaySlivers(WeekDay day, Calendar calendar, int columns) {
+    final items = calendar.weekMap[day] ?? const <CalendarSubject>[];
+    return [
+      SliverToBoxAdapter(child: _sectionHeaderBand(day, items.length)),
+      const SliverToBoxAdapter(
+        child: SizedBox(height: CalendarLayout.headerBodyGap),
+      ),
+      SliverPadding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: CalendarLayout.contentLeftPadding,
+        ).copyWith(right: CalendarLayout.contentRightPadding),
+        sliver: items.isEmpty
+            ? const SliverToBoxAdapter(child: _EmptyDayBody())
+            : SliverGrid(
+                delegate: SliverChildBuilderDelegate((context, index) {
+                  final item = items[index];
+                  return SubjectCard(
+                    subject: item.subject,
+                    watchers: item.watchers,
+                    onTap: () {},
+                  );
+                }, childCount: items.length),
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: columns,
+                  crossAxisSpacing: CalendarLayout.gridSpacing,
+                  mainAxisSpacing: CalendarLayout.gridSpacing,
+                  mainAxisExtent: CalendarLayout.cardExtent,
+                ),
+              ),
+      ),
+      const SliverToBoxAdapter(
+        child: SizedBox(height: CalendarLayout.sectionGap),
+      ),
+    ];
   }
 }
 
@@ -263,7 +459,7 @@ class _SectionHeader extends StatelessWidget {
     final isToday = day == WeekDay.today;
 
     return Padding(
-      padding: const EdgeInsets.only(top: 8, bottom: 4),
+      padding: const EdgeInsets.only(top: 8, bottom: 12),
       child: Row(
         children: [
           Container(
@@ -310,47 +506,116 @@ class _SectionHeader extends StatelessWidget {
   }
 }
 
-class _ItemGrid extends StatelessWidget {
-  final List<CalendarSubject> items;
-  final double itemWidth;
-  final double spacing;
+class _EmptyDayBody extends StatelessWidget {
+  const _EmptyDayBody();
 
-  const _ItemGrid({
-    required this.items,
-    required this.itemWidth,
-    required this.spacing,
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: CalendarLayout.emptyBodyExtent,
+      child: Center(
+        child: Text(
+          '暂无',
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            color: Theme.of(context).colorScheme.outline,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _WeekDayIsland extends StatelessWidget {
+  final ValueListenable<WeekDay> currentDay;
+  final ValueChanged<WeekDay> onSelected;
+
+  const _WeekDayIsland({required this.currentDay, required this.onSelected});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    final text = Theme.of(context).textTheme;
+
+    return Center(
+      child: Material(
+        color: colors.surfaceContainerHigh,
+        elevation: 2,
+        borderRadius: BorderRadius.circular(18),
+        clipBehavior: Clip.antiAlias,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
+          child: ValueListenableBuilder<WeekDay>(
+            valueListenable: currentDay,
+            builder: (context, selectedDay, _) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  for (final day in WeekDay.values)
+                    _WeekDayIslandButton(
+                      day: day,
+                      label: day.shortLabel,
+                      selected: day == selectedDay,
+                      onPressed: () => onSelected(day),
+                      colors: colors,
+                      text: text,
+                    ),
+                ],
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _WeekDayIslandButton extends StatelessWidget {
+  final WeekDay day;
+  final String label;
+  final bool selected;
+  final VoidCallback onPressed;
+  final ColorScheme colors;
+  final TextTheme text;
+
+  const _WeekDayIslandButton({
+    required this.day,
+    required this.label,
+    required this.selected,
+    required this.onPressed,
+    required this.colors,
+    required this.text,
   });
 
   @override
   Widget build(BuildContext context) {
-    if (items.isEmpty) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        child: Center(
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: '跳转到${day.label}',
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(14),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 160),
+          curve: Curves.easeOutCubic,
+          width: 40,
+          height: 28,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: selected ? colors.primaryContainer : Colors.transparent,
+            borderRadius: BorderRadius.circular(14),
+          ),
           child: Text(
-            '暂无',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context).colorScheme.outline,
+            label,
+            style: text.labelSmall?.copyWith(
+              color: selected
+                  ? colors.onPrimaryContainer
+                  : colors.onSurfaceVariant,
+              fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
             ),
           ),
         ),
-      );
-    }
-    return Wrap(
-      spacing: spacing,
-      runSpacing: spacing,
-      children: items
-          .map(
-            (e) => SizedBox(
-              width: itemWidth,
-              child: SubjectCard(
-                subject: e.subject,
-                watchers: e.watchers,
-                onTap: () {},
-              ),
-            ),
-          )
-          .toList(),
+      ),
     );
   }
 }

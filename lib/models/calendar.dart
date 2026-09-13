@@ -30,6 +30,16 @@ enum WeekDay {
     WeekDay.sunday => '星期日',
   };
 
+  String get shortLabel => switch (this) {
+    WeekDay.monday => '周一',
+    WeekDay.tuesday => '周二',
+    WeekDay.wednesday => '周三',
+    WeekDay.thursday => '周四',
+    WeekDay.friday => '周五',
+    WeekDay.saturday => '周六',
+    WeekDay.sunday => '周日',
+  };
+
   static WeekDay get today => fromValue(DateTime.now().weekday);
 }
 
