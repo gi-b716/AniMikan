@@ -15,15 +15,6 @@ enum CollectionType {
     (e) => e.value == v,
     orElse: () => CollectionType.unknown,
   );
-
-  String get label => switch (this) {
-    CollectionType.wish => '想看',
-    CollectionType.collect => '看过',
-    CollectionType.doing => '在看',
-    CollectionType.onHold => '搁置',
-    CollectionType.dropped => '抛弃',
-    CollectionType.unknown => '未知',
-  };
 }
 
 enum SubjectType {
@@ -41,15 +32,6 @@ enum SubjectType {
     (e) => e.value == v,
     orElse: () => SubjectType.unknown,
   );
-
-  String get label => switch (this) {
-    SubjectType.book => '书籍',
-    SubjectType.anime => '动画',
-    SubjectType.music => '音乐',
-    SubjectType.game => '游戏',
-    SubjectType.real => '三次元',
-    SubjectType.unknown => '未知',
-  };
 }
 
 class SubjectImages {

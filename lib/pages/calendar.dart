@@ -3,10 +3,26 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+import 'package:intl/intl.dart';
+
+import 'package:animikan/l10n/app_localizations.dart';
 import 'package:animikan/models/calendar.dart';
 import 'package:animikan/widgets/app_shell.dart';
 import 'package:animikan/services/bangumi.dart';
 import 'package:animikan/widgets/subject_card.dart';
+
+String _localeOf(BuildContext context) =>
+    Localizations.localeOf(context).toString();
+
+/// Weekday names come from `intl`, not from a translation table — the same
+/// strings ('周五' / 'Fri') for every locale that has date symbols.
+extension _WeekDayNames on WeekDay {
+  String fullName(BuildContext context) =>
+      DateFormat.EEEE(_localeOf(context)).format(date);
+
+  String shortName(BuildContext context) =>
+      DateFormat.E(_localeOf(context)).format(date);
+}
 
 int _isoWeekNumber(DateTime date) {
   final thursday = date.add(Duration(days: 3 - ((date.weekday + 5) % 7)));
@@ -123,8 +139,8 @@ class _CalendarPageState extends State<CalendarPage> {
     for (final day in WeekDay.values) day: _calendar?.weekMap[day]?.length ?? 0,
   };
 
-  static String _weekdayLabel(DateTime date) =>
-      WeekDay.fromValue(date.weekday).shortLabel;
+  static String _weekdayLabel(BuildContext context, DateTime date) =>
+      WeekDay.fromValue(date.weekday).shortName(context);
 
   static Duration _untilNextMidnight() {
     final now = DateTime.now();
@@ -253,15 +269,21 @@ class _CalendarPageState extends State<CalendarPage> {
   @override
   Widget build(BuildContext context) {
     final now = DateTime.now();
+    final l = AppLocalizations.of(context);
+    final year = now.year;
+    final week = _isoWeekNumber(now);
 
-    String title;
+    final String title;
     if (_loading || _refreshing) {
-      title = '${now.year}年第${_isoWeekNumber(now)}周放送时间表 [加载中]';
+      title = l.calendarTitleWeekLoading(year, week);
     } else if (_fetchedAt != null) {
-      title =
-          '${now.year}年第${_isoWeekNumber(now)}周放送时间表 · ${_weekdayLabel(_fetchedAt!)}获取';
+      title = l.calendarTitleWeekFetched(
+        year,
+        week,
+        _weekdayLabel(context, _fetchedAt!),
+      );
     } else {
-      title = '${now.year}年第${_isoWeekNumber(now)}周放送时间表';
+      title = l.calendarTitleWeek(year, week);
     }
     AppShellScope.setTitle(context, title);
 
@@ -278,7 +300,7 @@ class _CalendarPageState extends State<CalendarPage> {
               color: Theme.of(context).colorScheme.outline,
             ),
             const SizedBox(height: 12),
-            Text('加载失败', style: Theme.of(context).textTheme.titleMedium),
+            Text(l.loadFailed, style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 12),
             Container(
               constraints: const BoxConstraints(maxHeight: 200, maxWidth: 500),
@@ -299,7 +321,7 @@ class _CalendarPageState extends State<CalendarPage> {
               ),
             ),
             const SizedBox(height: 16),
-            FilledButton.tonal(onPressed: _loadData, child: const Text('重试')),
+            FilledButton.tonal(onPressed: _loadData, child: Text(l.retry)),
           ],
         ),
       );
@@ -476,7 +498,7 @@ class _SectionHeader extends StatelessWidget {
           ),
           const SizedBox(width: 10),
           Text(
-            day.label,
+            day.fullName(context),
             style: text.titleMedium?.copyWith(
               fontWeight: FontWeight.w700,
               color: isToday ? colors.primary : null,
@@ -492,7 +514,7 @@ class _SectionHeader extends StatelessWidget {
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Text(
-                '今天',
+                AppLocalizations.of(context).today,
                 style: text.labelSmall?.copyWith(
                   color: colors.onPrimaryContainer,
                 ),
@@ -501,7 +523,7 @@ class _SectionHeader extends StatelessWidget {
           ],
           const Spacer(),
           Text(
-            '$count 部',
+            AppLocalizations.of(context).nSubjects(count),
             style: text.bodySmall?.copyWith(color: colors.outline),
           ),
         ],
@@ -519,7 +541,7 @@ class _EmptyDayBody extends StatelessWidget {
       height: CalendarLayout.emptyBodyExtent,
       child: Center(
         child: Text(
-          '暂无',
+          AppLocalizations.of(context).noData,
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
             color: Theme.of(context).colorScheme.outline,
           ),
@@ -557,7 +579,7 @@ class _WeekDayIsland extends StatelessWidget {
                   for (final day in WeekDay.values)
                     _WeekDayIslandButton(
                       day: day,
-                      label: day.shortLabel,
+                      label: day.shortName(context),
                       selected: day == selectedDay,
                       onPressed: () => onSelected(day),
                       colors: colors,
@@ -595,7 +617,7 @@ class _WeekDayIslandButton extends StatelessWidget {
     return Semantics(
       button: true,
       selected: selected,
-      label: '跳转到${day.label}',
+      label: AppLocalizations.of(context).jumpToDay(day.fullName(context)),
       child: InkWell(
         onTap: onPressed,
         borderRadius: BorderRadius.circular(14),

@@ -20,25 +20,9 @@ enum WeekDay {
     );
   }
 
-  String get label => switch (this) {
-    WeekDay.monday => '星期一',
-    WeekDay.tuesday => '星期二',
-    WeekDay.wednesday => '星期三',
-    WeekDay.thursday => '星期四',
-    WeekDay.friday => '星期五',
-    WeekDay.saturday => '星期六',
-    WeekDay.sunday => '星期日',
-  };
-
-  String get shortLabel => switch (this) {
-    WeekDay.monday => '周一',
-    WeekDay.tuesday => '周二',
-    WeekDay.wednesday => '周三',
-    WeekDay.thursday => '周四',
-    WeekDay.friday => '周五',
-    WeekDay.saturday => '周六',
-    WeekDay.sunday => '周日',
-  };
+  /// A date that falls on this weekday, so the name can come from `intl`
+  /// (`DateFormat.EEEE` / `DateFormat.E`) instead of a translation table.
+  DateTime get date => DateTime(2024, 1, value);
 
   static WeekDay get today => fromValue(DateTime.now().weekday);
 }

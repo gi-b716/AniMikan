@@ -1,8 +1,24 @@
 import 'package:animikan/utils/network/network.dart';
 
+/// Why there is no proxy to use. Kept as a value rather than a sentence:
+/// detection runs before the first frame, where there is no build context to
+/// translate with, so wording it is the UI's job.
+enum SystemProxyReason {
+  unsupportedPlatform,
+  pacScript,
+  disabled,
+  noServer,
+  unparsable,
+}
+
 /// What detection found, and what to show about it.
 class SystemProxyResult {
-  const SystemProxyResult({this.config, this.detected, this.note});
+  const SystemProxyResult({
+    this.config,
+    this.detected,
+    this.reason,
+    this.detail,
+  });
 
   /// The proxy to route through, or null to go out directly.
   final ProxyConfig? config;
@@ -10,18 +26,22 @@ class SystemProxyResult {
   /// Display form, e.g. `http://127.0.0.1:7891` — never the password.
   final String? detected;
 
-  /// Why there is no config, in words for the user: the mode must never fail
-  /// silently.
-  final String? note;
+  /// Why there is no config: the mode must never fail silently.
+  final SystemProxyReason? reason;
+
+  /// Whatever the reason has to name: a PAC URL, an address we could not read.
+  final String? detail;
 }
 
 /// Turns what the OS says about its proxy into something the app can use.
 abstract final class SystemProxy {
-  /// Never throws: whatever goes wrong comes back as a [SystemProxyResult.note].
+  /// Never throws: whatever goes wrong comes back as a [SystemProxyResult.reason].
   static Future<SystemProxyResult> detect() async {
     final source = await Network.readSystemProxy();
     if (source == null) {
-      return const SystemProxyResult(note: '当前平台无法自动检测系统代理，将直连');
+      return const SystemProxyResult(
+        reason: SystemProxyReason.unsupportedPlatform,
+      );
     }
     return fromSource(source);
   }
@@ -30,18 +50,24 @@ abstract final class SystemProxy {
   static SystemProxyResult fromSource(SystemProxySource source) {
     final pac = source.autoConfigUrl;
     if (pac != null && pac.isNotEmpty) {
-      return SystemProxyResult(note: '检测到 PAC 自动配置脚本（$pac），暂不支持，将直连');
+      return SystemProxyResult(
+        reason: SystemProxyReason.pacScript,
+        detail: pac,
+      );
     }
     if (!source.enabled) {
-      return const SystemProxyResult(note: '系统未启用代理，将直连');
+      return const SystemProxyResult(reason: SystemProxyReason.disabled);
     }
     final server = source.server;
     if (server == null || server.isEmpty) {
-      return const SystemProxyResult(note: '系统未设置代理地址，将直连');
+      return const SystemProxyResult(reason: SystemProxyReason.noServer);
     }
     final config = parseProxyServer(server);
     if (config == null) {
-      return SystemProxyResult(note: '无法识别系统代理地址：$server');
+      return SystemProxyResult(
+        reason: SystemProxyReason.unparsable,
+        detail: server,
+      );
     }
     return SystemProxyResult(config: config, detected: config.toString());
   }

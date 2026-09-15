@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:animikan/l10n/app_localizations.dart';
 import 'package:animikan/models/subject.dart';
 import 'package:animikan/pages/calendar.dart';
 import 'package:animikan/pages/settings.dart';
@@ -24,31 +25,31 @@ final appTabs = <TabConfig>[
     location: AppRoute.calendar,
     icon: Icons.calendar_month_outlined,
     selectedIcon: Icons.calendar_month,
-    label: '日历',
+    label: (l) => l.tabCalendar,
   ),
   TabConfig(
     location: AppRoute.favourites,
     icon: Icons.star_outline,
     selectedIcon: Icons.star,
-    label: '收藏',
+    label: (l) => l.tabFavourites,
   ),
   TabConfig(
     location: AppRoute.cache,
     icon: Icons.download_outlined,
     selectedIcon: Icons.download_done,
-    label: '缓存',
+    label: (l) => l.tabCache,
   ),
   TabConfig(
     location: AppRoute.test,
     icon: Icons.developer_board_outlined,
     selectedIcon: Icons.developer_board,
-    label: '测试',
+    label: (l) => l.tabTest,
   ),
   TabConfig(
     location: AppRoute.settings,
     icon: Icons.settings_outlined,
     selectedIcon: Icons.settings,
-    label: '设置',
+    label: (l) => l.tabSettings,
   ),
 ];
 
@@ -77,7 +78,8 @@ GoRouter createRouter({required bool isMaximized, VoidCallback? onSearch}) {
             routes: [
               GoRoute(
                 path: AppRoute.favourites,
-                builder: (_, _) => const _PlaceholderPage(title: '收藏'),
+                builder: (_, _) =>
+                    _PlaceholderPage(label: (l) => l.tabFavourites),
               ),
             ],
           ),
@@ -85,7 +87,7 @@ GoRouter createRouter({required bool isMaximized, VoidCallback? onSearch}) {
             routes: [
               GoRoute(
                 path: AppRoute.cache,
-                builder: (_, _) => const _PlaceholderPage(title: '缓存'),
+                builder: (_, _) => _PlaceholderPage(label: (l) => l.tabCache),
               ),
             ],
           ),
@@ -121,12 +123,12 @@ GoRouter createRouter({required bool isMaximized, VoidCallback? onSearch}) {
 }
 
 class _PlaceholderPage extends StatelessWidget {
-  final String title;
+  final String Function(AppLocalizations) label;
 
-  const _PlaceholderPage({required this.title});
+  const _PlaceholderPage({required this.label});
 
   @override
   Widget build(BuildContext context) {
-    return Center(child: Text(title));
+    return Center(child: Text(label(AppLocalizations.of(context))));
   }
 }

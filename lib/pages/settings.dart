@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
+import 'package:animikan/l10n/app_localizations.dart';
+import 'package:animikan/l10n/labels.dart';
 import 'package:animikan/settings/app.dart';
 import 'package:animikan/utils/network/proxy.dart';
 import 'package:animikan/widgets/app_shell.dart';
@@ -15,7 +17,8 @@ class SettingsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    AppShellScope.setTitle(context, '设置');
+    final l = AppLocalizations.of(context);
+    AppShellScope.setTitle(context, l.settingsTitle);
     return ValueListenableBuilder<AppSettings>(
       valueListenable: AppSettingsStore.instance,
       builder: (context, settings, _) => SettingsBody(
@@ -23,13 +26,19 @@ class SettingsPage extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             SettingsSection(
-              '外观',
+              l.sectionAppearance,
               children: [
                 SettingsExpansionRow(
                   icon: Icons.brightness_6_outlined,
-                  title: '深浅色',
-                  subtitle: settings.themeMode.label,
-                  children: [_themeChoices(settings)],
+                  title: l.themeModeTitle,
+                  subtitle: settings.themeMode.label(l),
+                  children: [_themeChoices(l, settings)],
+                ),
+                SettingsExpansionRow(
+                  icon: Icons.translate_rounded,
+                  title: l.languageTitle,
+                  subtitle: settings.language.label(l),
+                  children: [_languageChoices(l, settings)],
                 ),
               ],
             ),
@@ -37,12 +46,12 @@ class SettingsPage extends StatelessWidget {
             // the web build does not offer the setting at all.
             if (!kIsWeb)
               SettingsSection(
-                '网络',
+                l.sectionNetwork,
                 children: [
                   SettingsExpansionRow(
                     icon: Icons.vpn_lock_outlined,
-                    title: '代理设置',
-                    subtitle: _proxySummary(settings),
+                    title: l.proxyTitle,
+                    subtitle: _proxySummary(l, settings),
                     children: const [_ProxyOptions()],
                   ),
                 ],
@@ -53,28 +62,51 @@ class SettingsPage extends StatelessWidget {
     );
   }
 
-  Widget _themeChoices(AppSettings settings) => RadioGroup<ThemeMode>(
-    groupValue: settings.themeMode,
-    onChanged: (mode) {
-      if (mode != null) AppSettingsStore.instance.setThemeMode(mode);
-    },
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        for (final mode in ThemeMode.values)
-          SettingsChoiceRow<ThemeMode>(value: mode, title: mode.label),
-      ],
-    ),
-  );
+  Widget _themeChoices(AppLocalizations l, AppSettings settings) =>
+      RadioGroup<ThemeMode>(
+        groupValue: settings.themeMode,
+        onChanged: (mode) {
+          if (mode != null) AppSettingsStore.instance.setThemeMode(mode);
+        },
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            for (final mode in ThemeMode.values)
+              SettingsChoiceRow<ThemeMode>(value: mode, title: mode.label(l)),
+          ],
+        ),
+      );
+
+  Widget _languageChoices(AppLocalizations l, AppSettings settings) =>
+      RadioGroup<Language>(
+        groupValue: settings.language,
+        onChanged: (language) {
+          if (language != null) AppSettingsStore.instance.setLanguage(language);
+        },
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            for (final language in Language.values)
+              SettingsChoiceRow<Language>(
+                value: language,
+                title: language.label(l),
+              ),
+          ],
+        ),
+      );
 }
 
-String _proxySummary(AppSettings settings) => switch (settings.proxyMode) {
-  ProxyMode.direct => '禁用',
-  ProxyMode.system =>
-    AppSettingsStore.instance.systemProxy?.detected ?? '跟随系统设置',
-  ProxyMode.custom => settings.customProxy?.toString() ?? '未设置',
-};
+/// The row's subtitle: what this setting is set to right now.
+String _proxySummary(AppLocalizations l, AppSettings settings) =>
+    switch (settings.proxyMode) {
+      ProxyMode.direct => l.proxyModeDirect,
+      ProxyMode.system =>
+        AppSettingsStore.instance.systemProxy?.detected ??
+            l.proxyFollowingSystem,
+      ProxyMode.custom => settings.customProxy?.toString() ?? l.proxyNotSet,
+    };
 
+/// The three modes, the system-proxy detection result and the custom form.
 class _ProxyOptions extends StatefulWidget {
   const _ProxyOptions();
 
@@ -88,6 +120,7 @@ class _ProxyOptionsState extends State<_ProxyOptions> {
   @override
   void initState() {
     super.initState();
+    // Detect on first expand, unless a result is already cached.
     if (_store.systemProxy == null) _redetect();
   }
 
@@ -96,6 +129,7 @@ class _ProxyOptionsState extends State<_ProxyOptions> {
     if (mounted) setState(() {});
   }
 
+  /// Applies at once; the system-proxy result arrives later, so redraw then.
   Future<void> _select(ProxyMode mode) async {
     await _store.setProxyMode(mode);
     if (mounted) setState(() {});
@@ -103,6 +137,7 @@ class _ProxyOptionsState extends State<_ProxyOptions> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     return ValueListenableBuilder<AppSettings>(
       valueListenable: _store,
       builder: (context, settings, _) => RadioGroup<ProxyMode>(
@@ -114,8 +149,8 @@ class _ProxyOptionsState extends State<_ProxyOptions> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             for (final mode in ProxyMode.values)
-              SettingsChoiceRow<ProxyMode>(value: mode, title: mode.label),
-            if (settings.proxyMode == ProxyMode.system) _detection(),
+              SettingsChoiceRow<ProxyMode>(value: mode, title: mode.label(l)),
+            if (settings.proxyMode == ProxyMode.system) _detection(l),
             if (settings.proxyMode == ProxyMode.custom)
               SettingsInfoRow(
                 child: _CustomProxyForm(initial: settings.customProxy),
@@ -126,17 +161,24 @@ class _ProxyOptionsState extends State<_ProxyOptions> {
     );
   }
 
-  Widget _detection() {
+  Widget _detection(AppLocalizations l) {
     final ColorScheme colors = Theme.of(context).colorScheme;
     final TextTheme text = Theme.of(context).textTheme;
     final result = _store.systemProxy;
 
-    final String message = result == null
-        ? '检测中…'
-        : (result.detected ?? result.note ?? '未检测到系统代理');
+    final String message;
+    if (result == null) {
+      message = l.proxyDetecting;
+    } else if (result.detected != null) {
+      message = result.detected!;
+    } else if (result.reason != null) {
+      message = systemProxyReasonText(l, result.reason!, result.detail);
+    } else {
+      message = l.proxyNotFound;
+    }
 
     return SettingsInfoRow(
-      title: '自动检测结果',
+      title: l.proxyDetected,
       child: Row(
         children: [
           Expanded(
@@ -149,13 +191,14 @@ class _ProxyOptionsState extends State<_ProxyOptions> {
             ),
           ),
           const SizedBox(width: 8),
-          TextButton(onPressed: _redetect, child: const Text('重新检测')),
+          TextButton(onPressed: _redetect, child: Text(l.proxyRedetect)),
         ],
       ),
     );
   }
 }
 
+/// Applies on save rather than per keystroke: every apply swaps the Dio adapter.
 class _CustomProxyForm extends StatefulWidget {
   const _CustomProxyForm({required this.initial});
 
@@ -192,11 +235,11 @@ class _CustomProxyFormState extends State<_CustomProxyForm> {
     super.dispose();
   }
 
-  void _save() {
+  void _save(AppLocalizations l) {
     final port = int.tryParse(_port.text.trim());
     if (port == null) {
       setState(() {
-        _error = '端口要填数字';
+        _error = l.portMustBeNumber;
         _applied = null;
       });
       return;
@@ -213,28 +256,32 @@ class _CustomProxyFormState extends State<_CustomProxyForm> {
       AppSettingsStore.instance.setCustomProxy(config);
       setState(() {
         _error = null;
-        _applied = '已应用 ${config.toString()}';
+        _applied = l.proxyApplied(config.toString());
       });
     } on ArgumentError catch (e) {
       setState(() {
-        _error = _messageFor(e);
+        _error = _messageFor(l, e);
         _applied = null;
       });
     }
   }
 
-  String _messageFor(ArgumentError error) => switch (error.name) {
-    'host' => '主机不能为空，也不能带端口',
-    'port' => '端口要在 1 到 65535 之间',
-    'username' => '用户名不能为空，也不能含 “:” 或 “@”',
-    'password' => '密码不能含 “;”，也不能以空格开头或结尾',
-    _ => error.message.toString(),
-  };
+  /// [ProxyConfig]'s errors are English (it is used elsewhere too) — say them in
+  /// the UI's language.
+  String _messageFor(AppLocalizations l, ArgumentError error) =>
+      switch (error.name) {
+        'host' => l.hostInvalid,
+        'port' => l.portInvalid,
+        'username' => l.usernameInvalid,
+        'password' => l.passwordInvalid,
+        _ => error.message.toString(),
+      };
 
   @override
   Widget build(BuildContext context) {
     final ColorScheme colors = Theme.of(context).colorScheme;
     final TextTheme text = Theme.of(context).textTheme;
+    final l = AppLocalizations.of(context);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -251,18 +298,22 @@ class _CustomProxyFormState extends State<_CustomProxyForm> {
         const SizedBox(height: 16),
         Row(
           children: [
-            Expanded(flex: 3, child: _field(_host, '主机')),
+            Expanded(flex: 3, child: _field(_host, l.hostLabel)),
             const SizedBox(width: 12),
             Expanded(
               flex: 2,
-              child: _field(_port, '端口', keyboardType: TextInputType.number),
+              child: _field(
+                _port,
+                l.portLabel,
+                keyboardType: TextInputType.number,
+              ),
             ),
           ],
         ),
         const SizedBox(height: 12),
-        _field(_username, '用户名（可选）'),
+        _field(_username, l.usernameLabel),
         const SizedBox(height: 12),
-        _field(_password, '密码（可选）', obscureText: true),
+        _field(_password, l.passwordLabel, obscureText: true),
         if (_error != null)
           Padding(
             padding: const EdgeInsets.only(top: 12),
@@ -282,7 +333,10 @@ class _CustomProxyFormState extends State<_CustomProxyForm> {
         const SizedBox(height: 16),
         Align(
           alignment: Alignment.centerRight,
-          child: FilledButton.tonal(onPressed: _save, child: const Text('保存')),
+          child: FilledButton.tonal(
+            onPressed: () => _save(l),
+            child: Text(l.save),
+          ),
         ),
       ],
     );

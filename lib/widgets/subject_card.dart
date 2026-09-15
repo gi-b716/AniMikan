@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:ratings_plus/ratings_plus.dart';
 
+import 'package:animikan/l10n/app_localizations.dart';
+import 'package:animikan/l10n/labels.dart';
 import 'package:animikan/models/subject.dart';
 
 class SubjectCard extends StatelessWidget {
@@ -74,7 +77,7 @@ class SubjectCard extends StatelessWidget {
                           if (watchers != null) ...[
                             _StatChip(
                               icon: Icons.visibility_outlined,
-                              value: _formatCount(watchers!),
+                              value: _formatCount(context, watchers!),
                             ),
                           ],
                         ],
@@ -139,7 +142,9 @@ class SubjectCard extends StatelessWidget {
                             Padding(
                               padding: const EdgeInsets.only(bottom: 3),
                               child: Text(
-                                '${_formatCount(subject.rating.total)}人',
+                                AppLocalizations.of(context).nRatings(
+                                  _formatCount(context, subject.rating.total),
+                                ),
                                 style: text.labelSmall?.copyWith(
                                   color: colors.outline,
                                 ),
@@ -158,9 +163,14 @@ class SubjectCard extends StatelessWidget {
     );
   }
 
-  static String _formatCount(int n) {
-    if (n >= 10000) return '${(n / 10000).toStringAsFixed(1)}万';
-    return n.toString();
+  static final _compact = <String, NumberFormat>{};
+
+  /// Compact for the locale: 12040 → 1.2万 (zh) / 12K (en).
+  static String _formatCount(BuildContext context, int n) {
+    final locale = Localizations.localeOf(context).toString();
+    return (_compact[locale] ??= NumberFormat.compact(
+      locale: locale,
+    )).format(n);
   }
 
   static String _extractInfo(String info) {
@@ -224,7 +234,7 @@ class _TypeBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(4),
       ),
       child: Text(
-        type.label,
+        type.label(AppLocalizations.of(context)),
         style: Theme.of(context).textTheme.labelSmall?.copyWith(
           color: colors.onSecondaryContainer,
           fontWeight: FontWeight(500),

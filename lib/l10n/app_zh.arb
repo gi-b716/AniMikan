@@ -1,0 +1,136 @@
+{
+  "@@locale": "zh",
+
+  "tabCalendar": "日历",
+  "tabFavourites": "收藏",
+  "tabCache": "缓存",
+  "tabTest": "测试",
+  "tabSettings": "设置",
+
+  "calendarTitleWeek": "{year}年第{week}周放送时间表",
+  "@calendarTitleWeek": {
+    "placeholders": {
+      "year": { "type": "int" },
+      "week": { "type": "int" }
+    }
+  },
+  "calendarTitleWeekLoading": "{year}年第{week}周放送时间表 [加载中]",
+  "@calendarTitleWeekLoading": {
+    "placeholders": {
+      "year": { "type": "int" },
+      "week": { "type": "int" }
+    }
+  },
+  "calendarTitleWeekFetched": "{year}年第{week}周放送时间表 · {weekday}获取",
+  "@calendarTitleWeekFetched": {
+    "placeholders": {
+      "year": { "type": "int" },
+      "week": { "type": "int" },
+      "weekday": { "type": "String" }
+    }
+  },
+  "loadFailed": "加载失败",
+  "retry": "重试",
+  "today": "今天",
+  "nSubjects": "{count, plural, other{{count} 部}}",
+  "noData": "暂无",
+  "jumpToDay": "跳转到{day}",
+  "@jumpToDay": {
+    "placeholders": {
+      "day": { "type": "String" }
+    }
+  },
+
+  "collectionWish": "想看",
+  "collectionCollect": "看过",
+  "collectionDoing": "在看",
+  "collectionOnHold": "搁置",
+  "collectionDropped": "抛弃",
+  "collectionUnknown": "未知",
+  "subjectBook": "书籍",
+  "subjectAnime": "动画",
+  "subjectMusic": "音乐",
+  "subjectGame": "游戏",
+  "subjectReal": "三次元",
+  "subjectUnknown": "未知",
+
+  "subjectDetailTitle": "番剧详情",
+  "subjectId": "Subject ID: {id}",
+  "@subjectId": {
+    "placeholders": {
+      "id": { "type": "String" }
+    }
+  },
+  "invalidId": "无效",
+  "score": "{score} 分",
+  "@score": {
+    "placeholders": {
+      "score": { "type": "String" }
+    }
+  },
+  "detailDemoNote": "这是一个由根 Navigator 承载的通用详情页：任何列表卡片都可以通过 context.push(AppRoute.subject(id), extra: subject) 打开它。",
+  "nRatings": "{count}人",
+  "@nRatings": {
+    "placeholders": {
+      "count": { "type": "String" }
+    }
+  },
+
+  "testPageTitle": "GoRouter 导航示例",
+  "testPageBody": "点击任意卡片会 push 同一个详情页；切换底部标签后再回来，测试页和各标签的状态会保留。",
+  "openDetailPage": "打开详情页",
+
+  "settingsTitle": "设置",
+  "sectionAppearance": "外观",
+  "sectionNetwork": "网络",
+  "themeModeTitle": "深浅色",
+  "systemDefault": "跟随系统",
+  "themeModeLight": "浅色",
+  "themeModeDark": "深色",
+  "languageTitle": "语言",
+  "languageZh": "简体中文",
+  "languageEn": "English",
+
+  "proxyTitle": "代理设置",
+  "proxyModeDirect": "禁用",
+  "proxyModeSystem": "系统代理",
+  "proxyModeCustom": "自定义",
+  "proxyFollowingSystem": "跟随系统设置",
+  "proxyNotSet": "未设置",
+  "proxyDetecting": "检测中…",
+  "proxyNotFound": "未检测到系统代理",
+  "proxyDetected": "自动检测结果",
+  "proxyRedetect": "重新检测",
+  "proxyApplied": "已应用 {proxy}",
+  "@proxyApplied": {
+    "placeholders": {
+      "proxy": { "type": "String" }
+    }
+  },
+  "hostLabel": "主机",
+  "portLabel": "端口",
+  "usernameLabel": "用户名（可选）",
+  "passwordLabel": "密码（可选）",
+  "save": "保存",
+  "portMustBeNumber": "端口要填数字",
+  "hostInvalid": "主机不能为空，也不能带端口",
+  "portInvalid": "端口要在 1 到 65535 之间",
+  "usernameInvalid": "用户名不能为空，也不能含 “:” 或 “@”",
+  "passwordInvalid": "密码不能含 “;”，也不能以空格开头或结尾",
+
+  "proxyUnsupportedPlatform": "当前平台无法自动检测系统代理，将直连",
+  "proxyPacScript": "检测到 PAC 自动配置脚本（{detail}），暂不支持，将直连",
+  "@proxyPacScript": {
+    "placeholders": {
+      "detail": { "type": "String" }
+    }
+  },
+  "proxyDisabled": "系统未启用代理，将直连",
+  "proxyNoServer": "系统未设置代理地址，将直连",
+  "proxyUnparsable": "无法识别系统代理地址：{detail}",
+  "@proxyUnparsable": {
+    "placeholders": {
+      "detail": { "type": "String" }
+    }
+  }
+}

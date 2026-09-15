@@ -6,57 +6,63 @@ import 'package:animikan/utils/network/network.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-enum ProxyMode {
-  direct('禁用'),
-  system('系统代理'),
-  custom('自定义');
+enum ProxyMode { direct, system, custom }
 
-  const ProxyMode(this.label);
+/// Which language the UI speaks; [system] follows the platform.
+enum Language {
+  system(null),
+  zh(Locale('zh')),
+  en(Locale('en'));
 
-  final String label;
+  const Language(this.locale);
+
+  /// What to hand `MaterialApp.locale`, or null to follow the system.
+  final Locale? locale;
 }
 
-extension ThemeModeLabel on ThemeMode {
-  String get label => switch (this) {
-    ThemeMode.system => '跟随系统',
-    ThemeMode.light => '浅色',
-    ThemeMode.dark => '深色',
-  };
-}
-
+/// Persisted as a single JSON blob; the `v` in [toJson] is its schema version.
 @immutable
 class AppSettings {
   const AppSettings({
     this.themeMode = ThemeMode.system,
     this.proxyMode = ProxyMode.direct,
     this.customProxy,
+    this.language = Language.system,
   });
 
+  /// Anything unreadable falls back to the default rather than failing the load.
   factory AppSettings.fromJson(Map<String, dynamic> json) => AppSettings(
     themeMode: _oneOf(ThemeMode.values, json['themeMode'], ThemeMode.system),
     proxyMode: _oneOf(ProxyMode.values, json['proxyMode'], ProxyMode.direct),
     customProxy: _proxy(json['customProxy']),
+    language: _oneOf(Language.values, json['language'], Language.system),
   );
 
   final ThemeMode themeMode;
   final ProxyMode proxyMode;
 
+  /// Used by [ProxyMode.custom]; the other modes ignore it.
   final ProxyConfig? customProxy;
+
+  final Language language;
 
   AppSettings copyWith({
     ThemeMode? themeMode,
     ProxyMode? proxyMode,
     ProxyConfig? customProxy,
+    Language? language,
   }) => AppSettings(
     themeMode: themeMode ?? this.themeMode,
     proxyMode: proxyMode ?? this.proxyMode,
     customProxy: customProxy ?? this.customProxy,
+    language: language ?? this.language,
   );
 
   Map<String, dynamic> toJson() => {
     'v': 1,
     'themeMode': themeMode.name,
     'proxyMode': proxyMode.name,
+    'language': language.name,
     if (customProxy != null) 'customProxy': customProxy!.toJson(),
   };
 
@@ -77,12 +83,14 @@ class AppSettings {
       other is AppSettings &&
       other.themeMode == themeMode &&
       other.proxyMode == proxyMode &&
-      other.customProxy == customProxy;
+      other.customProxy == customProxy &&
+      other.language == language;
 
   @override
-  int get hashCode => Object.hash(themeMode, proxyMode, customProxy);
+  int get hashCode => Object.hash(themeMode, proxyMode, customProxy, language);
 }
 
+/// Reads once at startup, then applies and persists on every change.
 class AppSettingsStore extends ValueNotifier<AppSettings> {
   AppSettingsStore._() : super(const AppSettings());
 
@@ -90,6 +98,8 @@ class AppSettingsStore extends ValueNotifier<AppSettings> {
 
   static const _key = 'settings';
 
+  /// Lazily created: a missing platform implementation should fail the
+  /// read/write, not the app.
   SharedPreferencesAsync? _prefs;
   SharedPreferencesAsync get _storage => _prefs ??= SharedPreferencesAsync();
 
@@ -97,7 +107,9 @@ class AppSettingsStore extends ValueNotifier<AppSettings> {
 
   SystemProxyResult? get systemProxy => _systemProxy;
 
+  /// Call before the first request — see main().
   Future<void> load() async {
+    // Flutter's image client exists only once; take it over before it is built.
     Network.prepare();
 
     var settings = const AppSettings();
@@ -118,12 +130,16 @@ class AppSettingsStore extends ValueNotifier<AppSettings> {
   Future<void> setThemeMode(ThemeMode mode) =>
       _update(value.copyWith(themeMode: mode));
 
+  Future<void> setLanguage(Language language) =>
+      _update(value.copyWith(language: language));
+
   Future<void> setProxyMode(ProxyMode mode) =>
       _update(value.copyWith(proxyMode: mode));
 
   Future<void> setCustomProxy(ProxyConfig proxy) =>
       _update(value.copyWith(proxyMode: ProxyMode.custom, customProxy: proxy));
 
+  /// Re-detect, for a proxy client that changed ports while the app was running.
   Future<SystemProxyResult> redetectSystemProxy() async {
     final result = await _detect(force: true);
     if (value.proxyMode == ProxyMode.system) {
@@ -143,7 +159,7 @@ class AppSettingsStore extends ValueNotifier<AppSettings> {
     try {
       await _storage.setString(_key, jsonEncode(settings.toJson()));
     } catch (_) {
-      // pass
+      // pass — a failed write must not undo what is already in effect
     }
   }
 
@@ -155,6 +171,7 @@ class AppSettingsStore extends ValueNotifier<AppSettings> {
         Network.configure(settings.customProxy);
       case ProxyMode.system:
         final requested = settings;
+        // Detection is async: drop the result if the user picked something else.
         final result = await _detect();
         if (!identical(value, requested)) return;
         Network.configure(result.config);

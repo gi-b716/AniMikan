@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:window_manager/window_manager.dart';
 
 import 'package:animikan/config.dart';
+import 'package:animikan/l10n/app_localizations.dart';
 import 'package:animikan/router.dart';
 import 'package:animikan/settings/app.dart';
 import 'package:animikan/theme.dart';
@@ -56,6 +57,9 @@ class _MainAppState extends State<MainApp> {
         theme: AppTheme.of(Brightness.light),
         darkTheme: AppTheme.of(Brightness.dark),
         themeMode: settings.themeMode,
+        locale: settings.language.locale,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         routerConfig: _router,
       ),
     );

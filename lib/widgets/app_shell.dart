@@ -4,33 +4,25 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:window_manager/window_manager.dart';
 
+import 'package:animikan/l10n/app_localizations.dart';
 import 'package:animikan/utils/platform.dart';
 
 final rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'rootNavigator');
 
 class TabConfig {
-  final String location;
-  final IconData icon;
-  final IconData selectedIcon;
-  final String label;
-  final NavigationRailDestination rail;
-  final NavigationDestination bar;
-
-  TabConfig({
+  const TabConfig({
     required this.location,
     required this.icon,
     required this.selectedIcon,
     required this.label,
-  }) : rail = NavigationRailDestination(
-         icon: Icon(icon),
-         selectedIcon: Icon(selectedIcon),
-         label: Text(label),
-       ),
-       bar = NavigationDestination(
-         icon: Icon(icon),
-         selectedIcon: Icon(selectedIcon),
-         label: label,
-       );
+  });
+
+  final String location;
+  final IconData icon;
+  final IconData selectedIcon;
+
+  /// Resolved where it is shown, so the label follows a language change.
+  final String Function(AppLocalizations) label;
 }
 
 class AppShellScope extends InheritedWidget {
@@ -182,7 +174,8 @@ class _AppShellState extends State<AppShell> with WindowListener {
   bool _canPop = false;
 
   int get _i => widget.navigationShell.currentIndex;
-  String get _currentTitle => _customTitle ?? widget.tabs[_i].label;
+  String _currentTitle(AppLocalizations l) =>
+      _customTitle ?? widget.tabs[_i].label(l);
 
   void _syncTitle(String title, bool canPop) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -277,6 +270,9 @@ class _AppShellState extends State<AppShell> with WindowListener {
 
   Widget _wide(Widget page) {
     final cs = Theme.of(context).colorScheme;
+    // Reading the localization here is what makes the shell rebuild — and the
+    // tab labels change — when the language setting does.
+    final l = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: cs.surfaceContainerHigh,
       body: Row(
@@ -299,7 +295,14 @@ class _AppShellState extends State<AppShell> with WindowListener {
                 child: const Icon(Icons.search, size: 28),
               ),
             ),
-            destinations: [for (final t in widget.tabs) t.rail],
+            destinations: [
+              for (final t in widget.tabs)
+                NavigationRailDestination(
+                  icon: Icon(t.icon),
+                  selectedIcon: Icon(t.selectedIcon),
+                  label: Text(t.label(l)),
+                ),
+            ],
           ),
           Expanded(
             child: Material(
@@ -322,19 +325,29 @@ class _AppShellState extends State<AppShell> with WindowListener {
     );
   }
 
-  Widget _narrow(Widget page) => Scaffold(
-    body: Column(
-      children: [
-        _topBar(),
-        Expanded(child: page),
-      ],
-    ),
-    bottomNavigationBar: NavigationBar(
-      selectedIndex: _i,
-      onDestinationSelected: _goBranch,
-      destinations: [for (final t in widget.tabs) t.bar],
-    ),
-  );
+  Widget _narrow(Widget page) {
+    final l = AppLocalizations.of(context);
+    return Scaffold(
+      body: Column(
+        children: [
+          _topBar(),
+          Expanded(child: page),
+        ],
+      ),
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _i,
+        onDestinationSelected: _goBranch,
+        destinations: [
+          for (final t in widget.tabs)
+            NavigationDestination(
+              icon: Icon(t.icon),
+              selectedIcon: Icon(t.selectedIcon),
+              label: t.label(l),
+            ),
+        ],
+      ),
+    );
+  }
 
   Widget _backRow() {
     final cs = Theme.of(context).colorScheme;
@@ -353,7 +366,7 @@ class _AppShellState extends State<AppShell> with WindowListener {
           ),
         SizedBox(width: _canPop ? 4.0 : 16.0),
         Text(
-          _currentTitle,
+          _currentTitle(AppLocalizations.of(context)),
           style: TextStyle(
             fontSize: 13,
             color: cs.onSurface.withValues(alpha: 0.7),
