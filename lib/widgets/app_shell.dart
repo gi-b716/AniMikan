@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart'
+    show defaultTargetPlatform, TargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:window_manager/window_manager.dart';
@@ -169,6 +171,11 @@ class AppShell extends StatefulWidget {
 class _AppShellState extends State<AppShell> with WindowListener {
   static const _barH = 38.0;
 
+  /// The width of the resize border Windows draws around a window, in physical
+  /// pixels — the same 8 that `window_manager_plugin.cpp` keeps for itself in
+  /// its `WM_NCCALCSIZE` handling.
+  static const _nativeBorder = 8.0;
+
   late bool _maximized;
   late bool _desktop;
   String? _customTitle;
@@ -224,11 +231,49 @@ class _AppShellState extends State<AppShell> with WindowListener {
       activeLocation: widget.tabs[_i].location,
       child: widget.navigationShell,
     );
-    return OrientationBuilder(
+    final shell = OrientationBuilder(
       builder: (_, o) =>
           o == Orientation.landscape ? _wide(body) : _narrow(body),
     );
+    if (!_desktop) return shell;
+    return DragToResizeArea(
+      enableResizeEdges: _maximized ? const <ResizeEdge>[] : _resizeEdges,
+      resizeEdgeSize: _resizeEdgeSize(context),
+      child: shell,
+    );
   }
+
+  /// The window edges left for the app to hit-test, which depends on how much
+  /// of the frame the platform keeps once the title bar is hidden:
+  ///
+  /// * Windows keeps 8px of native border on the left, right and bottom but
+  ///   none at the top — `window_manager_plugin.cpp` hands back a client area
+  ///   flush with the top of the window — so without a hit zone here, the top
+  ///   edge cannot be dragged at all.
+  /// * Linux drops the frame altogether (`gtk_window_set_decorated(false)`), so
+  ///   every edge is the app's to provide.
+  /// * macOS keeps its native frame, which does all of it.
+  ///
+  /// `DragToResizeArea` is window_manager's own widget for this, and what
+  /// `VirtualWindowFrame` in that package does on each platform.
+  List<ResizeEdge> get _resizeEdges => switch (defaultTargetPlatform) {
+    TargetPlatform.windows => const [
+      ResizeEdge.topLeft,
+      ResizeEdge.top,
+      ResizeEdge.topRight,
+    ],
+    TargetPlatform.linux => ResizeEdge.values,
+    _ => const <ResizeEdge>[],
+  };
+
+  /// How thick those hit zones are, in logical pixels.
+  ///
+  /// Windows' border is 8 *physical* pixels, so matching it keeps this strip
+  /// exactly where the native one would have been.
+  double _resizeEdgeSize(BuildContext context) =>
+      defaultTargetPlatform == TargetPlatform.windows
+      ? _nativeBorder / MediaQuery.devicePixelRatioOf(context)
+      : _nativeBorder;
 
   Widget _wide(Widget page) {
     final cs = Theme.of(context).colorScheme;
