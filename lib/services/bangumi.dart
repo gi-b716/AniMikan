@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 
 import 'package:animikan/config.dart';
 import 'package:animikan/models/calendar.dart';
+import 'package:animikan/utils/network/network.dart';
 
 class BangumiException implements Exception {
   final String message;
@@ -21,7 +22,9 @@ class BangumiClient {
 
   final Dio _dio;
 
-  BangumiClient({Dio? dio}) : _dio = dio ?? _createDio();
+  BangumiClient({Dio? dio}) : _dio = dio ?? _createDio() {
+    Network.bindDio(_dio);
+  }
 
   static Dio _createDio() => Dio(
     BaseOptions(

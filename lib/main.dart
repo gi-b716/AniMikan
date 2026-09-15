@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
 
@@ -7,13 +5,11 @@ import 'package:animikan/config.dart';
 import 'package:animikan/router.dart';
 import 'package:animikan/theme.dart';
 import 'package:animikan/utils/platform.dart';
-import 'package:animikan/utils/network.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // TODO: Read proxy from config
-  HttpOverrides.global = ProxyOverrides('');
+  // TODO: read the saved proxy and apply it here
 
   await BangumiConst.init();
 
