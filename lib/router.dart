@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:animikan/models/subject.dart';
 import 'package:animikan/pages/calendar.dart';
+import 'package:animikan/pages/settings.dart';
 import 'package:animikan/pages/subject_detail.dart';
 import 'package:animikan/pages/test.dart';
 import 'package:animikan/widgets/app_shell.dart';
@@ -97,7 +98,7 @@ GoRouter createRouter({required bool isMaximized, VoidCallback? onSearch}) {
             routes: [
               GoRoute(
                 path: AppRoute.settings,
-                builder: (_, _) => const _PlaceholderPage(title: '设置'),
+                builder: (_, _) => const SettingsPage(),
               ),
             ],
           ),

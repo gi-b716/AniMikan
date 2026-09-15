@@ -216,6 +216,24 @@ String _decode(String value) {
   }
 }
 
+/// What the OS says its proxy is, as read. Turning it into a [ProxyConfig] —
+/// and wording the outcome for the UI — is the settings layer's job.
+class SystemProxySource {
+  const SystemProxySource({
+    required this.enabled,
+    this.server,
+    this.autoConfigUrl,
+  });
+
+  final bool enabled;
+
+  /// `host:port`, Windows' per-scheme list (`http=…;https=…;socks=…`), or a URL.
+  final String? server;
+
+  /// Set when the OS uses a PAC script instead of a fixed server.
+  final String? autoConfigUrl;
+}
+
 abstract interface class NetworkBackend {
   ProxyConfig? get proxy;
 
@@ -225,6 +243,12 @@ abstract interface class NetworkBackend {
   set allowBadCertificates(bool value);
 
   void configure(ProxyConfig? config);
+
+  void prepare();
+
+  /// The OS proxy settings, or null when this platform has none to read (the
+  /// web) or reading them failed.
+  Future<SystemProxySource?> readSystemProxy();
 
   void bindDio(Dio dio);
 }

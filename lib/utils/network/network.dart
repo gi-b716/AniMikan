@@ -3,7 +3,8 @@ import 'package:animikan/utils/network/web.dart'
     if (dart.library.io) 'package:animikan/utils/network/io.dart';
 import 'package:dio/dio.dart';
 
-export 'package:animikan/utils/network/proxy.dart' show ProxyConfig, ProxyType;
+export 'package:animikan/utils/network/proxy.dart'
+    show ProxyConfig, ProxyType, SystemProxySource;
 
 /// Which proxy, if any, the app's HTTP traffic goes through.
 ///
@@ -31,11 +32,17 @@ abstract final class Network {
 
   static void configure(ProxyConfig? config) => backend.configure(config);
 
+  static void prepare() => backend.prepare();
+
   /// Throws [FormatException] when the string cannot be read as a proxy.
   static void use(String? input) {
     final text = input?.trim() ?? '';
     configure(text.isEmpty ? null : ProxyConfig.parse(text));
   }
+
+  /// The OS proxy settings; null when this platform has none to read.
+  static Future<SystemProxySource?> readSystemProxy() =>
+      backend.readSystemProxy();
 
   static void bindDio(Dio dio) => backend.bindDio(dio);
 }

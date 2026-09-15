@@ -36,5 +36,13 @@ class _WebNetwork implements NetworkBackend {
 
   /// Nothing to do.
   @override
+  void prepare() {}
+
+  /// Nothing to read: the browser owns proxying.
+  @override
+  Future<SystemProxySource?> readSystemProxy() async => null;
+
+  /// Nothing to do.
+  @override
   void bindDio(Dio dio) {}
 }

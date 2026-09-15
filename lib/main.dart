@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:window_manager/window_manager.dart';
 
 import 'package:animikan/config.dart';
 import 'package:animikan/router.dart';
+import 'package:animikan/settings/app.dart';
 import 'package:animikan/theme.dart';
 import 'package:animikan/utils/platform.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // TODO: read the saved proxy and apply it here
+  await AppSettingsStore.instance.load();
 
   await BangumiConst.init();
 
@@ -29,22 +31,32 @@ void _onSearchPressed() {
   throw UnimplementedError();
 }
 
-class MainApp extends StatelessWidget {
+class MainApp extends StatefulWidget {
   final bool isMaximized;
 
   const MainApp({super.key, required this.isMaximized});
 
   @override
+  State<MainApp> createState() => _MainAppState();
+}
+
+class _MainAppState extends State<MainApp> {
+  late final GoRouter _router = createRouter(
+    isMaximized: widget.isMaximized,
+    onSearch: _onSearchPressed,
+  );
+
+  @override
   Widget build(BuildContext context) {
-    return MaterialApp.router(
-      title: 'AniMikan',
-      debugShowCheckedModeBanner: true,
-      theme: AppTheme.of(Brightness.light),
-      darkTheme: AppTheme.of(Brightness.dark),
-      themeMode: ThemeMode.system,
-      routerConfig: createRouter(
-        isMaximized: isMaximized,
-        onSearch: _onSearchPressed,
+    return ValueListenableBuilder<AppSettings>(
+      valueListenable: AppSettingsStore.instance,
+      builder: (context, settings, _) => MaterialApp.router(
+        title: 'AniMikan',
+        debugShowCheckedModeBanner: true,
+        theme: AppTheme.of(Brightness.light),
+        darkTheme: AppTheme.of(Brightness.dark),
+        themeMode: settings.themeMode,
+        routerConfig: _router,
       ),
     );
   }

@@ -20,6 +20,8 @@ class _IoNetwork implements NetworkBackend {
 
   _ProxyOverrides? _installed;
 
+  bool _prepared = false;
+
   @override
   ProxyConfig? get proxy => _proxy;
 
@@ -43,6 +45,19 @@ class _IoNetwork implements NetworkBackend {
     _proxy = config;
     _installOverrides();
     _changes.add(config);
+  }
+
+  @override
+  void prepare() {
+    if (_prepared) return;
+    _prepared = true;
+    _installOverrides();
+  }
+
+  @override
+  Future<SystemProxySource?> readSystemProxy() async {
+    if (Platform.isWindows) return _readWindowsProxy();
+    return _readEnvironmentProxy();
   }
 
   @override
@@ -81,7 +96,7 @@ class _IoNetwork implements NetworkBackend {
   }
 
   void _installOverrides() {
-    if (_proxy != null || _allowBadCertificates) {
+    if (_prepared || _proxy != null || _allowBadCertificates) {
       _installed = _ProxyOverrides(this);
       HttpOverrides.global = _installed;
       return;
@@ -137,6 +152,63 @@ class _IoNetwork implements NetworkBackend {
           : Socket.startConnect(uri.host, uri.port);
     };
   }
+}
+
+/// The key Windows keeps the per-user proxy settings in.
+const _internetSettings =
+    r'Software\Microsoft\Windows\CurrentVersion\Internet Settings';
+
+/// One `reg query` for the whole key. Going through WinHTTP with FFI would buy
+/// nothing here: PAC scripts cannot be evaluated either way.
+Future<SystemProxySource?> _readWindowsProxy() async {
+  try {
+    final result = await Process.run('reg', [
+      'query',
+      'HKCU\\$_internetSettings',
+    ]).timeout(const Duration(seconds: 3));
+    if (result.exitCode != 0) return null;
+    return parseRegistryQuery(result.stdout as String);
+  } on ProcessException {
+    return null;
+  } on TimeoutException {
+    return null;
+  }
+}
+
+/// Reads `reg query` output; null when there was nothing to read.
+SystemProxySource? parseRegistryQuery(String output) {
+  final values = <String, String>{};
+  final line = RegExp(r'^\s*(\S+)\s+REG_\w+\s+(.*?)\s*$', multiLine: true);
+  for (final match in line.allMatches(output)) {
+    values[match.group(1)!.toLowerCase()] = match.group(2)!;
+  }
+  if (values.isEmpty) return null;
+
+  return SystemProxySource(
+    // REG_DWORD, 0x1 is the only enabled value.
+    enabled: values['proxyenable'] == '0x1',
+    server: values['proxyserver'],
+    autoConfigUrl: values['autoconfigurl'],
+  );
+}
+
+/// The customary variables, the first one that is set wins.
+SystemProxySource? _readEnvironmentProxy() {
+  const names = [
+    'https_proxy',
+    'HTTPS_PROXY',
+    'http_proxy',
+    'HTTP_PROXY',
+    'all_proxy',
+    'ALL_PROXY',
+  ];
+  final environment = Platform.environment;
+  for (final name in names) {
+    final value = environment[name]?.trim();
+    if (value == null || value.isEmpty) continue;
+    return SystemProxySource(enabled: true, server: value);
+  }
+  return null;
 }
 
 bool _acceptAnyCertificate(X509Certificate _) => true;
