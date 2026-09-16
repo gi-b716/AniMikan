@@ -1,0 +1,75 @@
+name: Build AniMikan for Linux
+description: >-
+  Builds the Flutter Linux release and packs the bundle as a tar.gz. tar.gz
+  rather than zip because zip carries no executable bit, which would leave every
+  downloader having to chmod +x the binary first.
+
+inputs:
+  version:
+    description: Version stamped into the binary, e.g. 0.1.0 or 0.1.0-nightly.20260916.
+    required: true
+  base-name:
+    description: Filename stem, without extension.
+    required: true
+  dist-dir:
+    description: Directory the artifact is written to.
+    required: false
+    default: dist
+
+outputs:
+  tarball-path:
+    description: Absolute path to the tar.gz.
+    value: ${{ steps.package.outputs.tarball-path }}
+
+runs:
+  using: composite
+  steps:
+    - name: Install Linux toolchain
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y --no-install-recommends \
+          clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev
+
+    - name: Build
+      shell: bash
+      working-directory: ${{ github.workspace }}
+      env:
+        APP_VERSION: ${{ inputs.version }}
+      run: |
+        set -euo pipefail
+        flutter pub get
+        flutter analyze
+
+        # No --build-number, matching Windows: the version comes from pubspec
+        # alone, so there is no separate counter to keep in sync.
+        flutter build linux --release --build-name="$APP_VERSION"
+
+    - name: Package
+      id: package
+      shell: bash
+      working-directory: ${{ github.workspace }}
+      env:
+        BASE_NAME: ${{ inputs.base-name }}
+      run: |
+        set -euo pipefail
+        bundle=build/linux/x64/release/bundle
+        if [ ! -x "$bundle/animikan" ]; then
+          echo "Flutter did not produce $bundle/animikan" >&2
+          exit 1
+        fi
+
+        # Everything under one AniMikan/ folder, so extracting does not scatter
+        # the bundle across the download directory.
+        stage="$RUNNER_TEMP/portable"
+        rm -rf "$stage"
+        mkdir -p "$stage/AniMikan"
+        cp -a "$bundle/." "$stage/AniMikan/"
+
+        dist="$GITHUB_WORKSPACE/${{ inputs.dist-dir }}"
+        mkdir -p "$dist"
+        tarball="$dist/$BASE_NAME.tar.gz"
+        tar -C "$stage" -czf "$tarball" AniMikan
+
+        echo "tarball-path=$tarball" >> "$GITHUB_OUTPUT"
+        echo "tarball: $tarball"

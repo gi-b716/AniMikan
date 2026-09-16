@@ -31,9 +31,6 @@ outputs:
   zip-path:
     description: Absolute path to the portable zip.
     value: ${{ steps.package.outputs.zip-path }}
-  notes-path:
-    description: Absolute path to the rendered release notes.
-    value: ${{ steps.notes.outputs.notes-path }}
 
 runs:
   using: composite
@@ -133,36 +130,3 @@ runs:
         "zip-path=$zip" >> $env:GITHUB_OUTPUT
         Write-Host "setup: $setup"
         Write-Host "zip:   $zip"
-
-    - name: Render changelog
-      id: notes
-      shell: pwsh
-      working-directory: ${{ github.workspace }}
-      env:
-        NOTES_HEADER: ${{ inputs.notes-header }}
-        CLIFF_ARGS: ${{ inputs.changelog-args }}
-      run: |
-        $ErrorActionPreference = 'Stop'
-        $cliffVersion = '2.14.1'
-        $cliffDir = Join-Path $env:RUNNER_TEMP 'git-cliff'
-        New-Item -ItemType Directory -Force -Path $cliffDir | Out-Null
-        $cliffZip = Join-Path $env:RUNNER_TEMP 'git-cliff.zip'
-        Invoke-WebRequest `
-          -Uri "https://github.com/orhun/git-cliff/releases/download/v$cliffVersion/git-cliff-$cliffVersion-x86_64-pc-windows-msvc.zip" `
-          -OutFile $cliffZip
-        Expand-Archive -Path $cliffZip -DestinationPath $cliffDir -Force
-        $cliff = Get-ChildItem -Path $cliffDir -Recurse -Filter 'git-cliff.exe' | Select-Object -First 1
-        if (-not $cliff) { throw 'git-cliff.exe missing from the release archive.' }
-
-        $notes = Join-Path $env:GITHUB_WORKSPACE 'RELEASE_NOTES.md'
-        # fetch-depth: 0 in the caller is what makes the full history available.
-        $header = if ($env:NOTES_HEADER) { $env:NOTES_HEADER + "`n`n" } else { '' }
-
-        $cliffArgs = @($env:CLIFF_ARGS -split '\s+' | Where-Object { $_ })
-
-        $body = & $cliff.FullName --config cliff.toml @cliffArgs --strip header
-        if ($LASTEXITCODE -ne 0) { throw "git-cliff exited with $LASTEXITCODE" }
-        $header + $body | Set-Content -Path $notes -Encoding utf8
-
-        "notes-path=$notes" >> $env:GITHUB_OUTPUT
-        Write-Host "notes: $notes"

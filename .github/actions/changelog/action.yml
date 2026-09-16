@@ -1,0 +1,65 @@
+name: Render changelog
+description: >-
+  Downloads git-cliff and renders the release notes. Platform independent, so it
+  runs once per release rather than once per build matrix leg.
+
+inputs:
+  args:
+    description: git-cliff range selector, e.g. --latest for a tag or --unreleased for nightly.
+    required: false
+    default: --latest
+  header:
+    description: Markdown prepended to the rendered changelog.
+    required: false
+    default: ''
+
+outputs:
+  notes-path:
+    description: Absolute path to the rendered release notes.
+    value: ${{ steps.notes.outputs.notes-path }}
+
+runs:
+  using: composite
+  steps:
+    - name: Render
+      id: notes
+      shell: pwsh
+      working-directory: ${{ github.workspace }}
+      env:
+        NOTES_HEADER: ${{ inputs.header }}
+        CLIFF_ARGS: ${{ inputs.args }}
+      run: |
+        $ErrorActionPreference = 'Stop'
+        $cliffVersion = '2.14.1'
+        $cliffDir = Join-Path $env:RUNNER_TEMP 'git-cliff'
+        New-Item -ItemType Directory -Force -Path $cliffDir | Out-Null
+        $cliffZip = Join-Path $env:RUNNER_TEMP 'git-cliff.zip'
+        Invoke-WebRequest `
+          -Uri "https://github.com/orhun/git-cliff/releases/download/v$cliffVersion/git-cliff-$cliffVersion-x86_64-pc-windows-msvc.zip" `
+          -OutFile $cliffZip
+        Expand-Archive -Path $cliffZip -DestinationPath $cliffDir -Force
+        $cliff = Get-ChildItem -Path $cliffDir -Recurse -Filter 'git-cliff.exe' | Select-Object -First 1
+        if (-not $cliff) { throw 'git-cliff.exe missing from the release archive.' }
+
+        $notes = Join-Path $env:GITHUB_WORKSPACE 'RELEASE_NOTES.md'
+
+        # @() is load-bearing: a pipeline yielding one item assigns a String,
+        # and splatting a String to a native command passes a bare "-".
+        $cliffArgs = @($env:CLIFF_ARGS -split '\s+' | Where-Object { $_ })
+
+        # The caller checks out with fetch-depth: 0, which is what makes the
+        # full history available here.
+        $body = & $cliff.FullName --config cliff.toml @cliffArgs --strip header
+        if ($LASTEXITCODE -ne 0) { throw "git-cliff exited with $LASTEXITCODE" }
+
+        # Header and body stay separate elements of one array. `$header + $body`
+        # would stringify the body instead: PowerShell's + joins the right-hand
+        # array with $OFS (a space) when the left side is a String, flattening
+        # the entire changelog onto one line.
+        $lines = @()
+        if ($env:NOTES_HEADER) { $lines += $env:NOTES_HEADER, '' }
+        $lines += $body
+        Set-Content -Path $notes -Value $lines -Encoding utf8
+
+        "notes-path=$notes" >> $env:GITHUB_OUTPUT
+        Write-Host "notes: $notes"
