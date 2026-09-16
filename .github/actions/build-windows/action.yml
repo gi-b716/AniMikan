@@ -157,10 +157,12 @@ runs:
         $notes = Join-Path $env:GITHUB_WORKSPACE 'RELEASE_NOTES.md'
         # fetch-depth: 0 in the caller is what makes the full history available.
         $header = if ($env:NOTES_HEADER) { $env:NOTES_HEADER + "`n`n" } else { '' }
-        $cliffArgs = $env:CLIFF_ARGS -split '\s+' | Where-Object { $_ }
-        $header + (& $cliff.FullName --config cliff.toml @cliffArgs --strip header) |
-          Set-Content -Path $notes -Encoding utf8
+
+        $cliffArgs = @($env:CLIFF_ARGS -split '\s+' | Where-Object { $_ })
+
+        $body = & $cliff.FullName --config cliff.toml @cliffArgs --strip header
         if ($LASTEXITCODE -ne 0) { throw "git-cliff exited with $LASTEXITCODE" }
+        $header + $body | Set-Content -Path $notes -Encoding utf8
 
         "notes-path=$notes" >> $env:GITHUB_OUTPUT
         Write-Host "notes: $notes"
