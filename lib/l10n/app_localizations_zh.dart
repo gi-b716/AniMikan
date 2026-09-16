@@ -231,6 +231,27 @@ class AppLocalizationsZh extends AppLocalizations {
   String get passwordInvalid => '密码不能含 “;”，也不能以空格开头或结尾';
 
   @override
+  String get sectionDebug => '调试';
+
+  @override
+  String get debugClearTitle => '清除所有数据';
+
+  @override
+  String get debugClearSubtitle => '清除设置并重启应用';
+
+  @override
+  String get debugClearAction => '清除';
+
+  @override
+  String get debugClearConfirmTitle => '清除所有数据？';
+
+  @override
+  String get debugClearConfirmBody => '所有设置会被删除，应用随后重启。此操作无法撤销。';
+
+  @override
+  String get cancel => '取消';
+
+  @override
   String get proxyUnsupportedPlatform => '当前平台无法自动检测系统代理，将直连';
 
   @override

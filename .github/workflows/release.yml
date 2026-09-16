@@ -1,0 +1,120 @@
+name: Release
+
+# Publishing is driven by pushing a tag:
+#
+#   git tag v0.1.0 && git push origin v0.1.0
+#
+# The tag must match `version:` in pubspec.yaml, otherwise the run fails early
+# rather than shipping an exe that reports the wrong version.
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Existing tag to (re)publish, e.g. v0.1.0'
+        required: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.event.inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # git-cliff needs the whole history to render the changelog.
+          fetch-depth: 0
+          ref: ${{ github.event.inputs.tag || github.ref }}
+
+      - name: Resolve version
+        id: meta
+        shell: pwsh
+        env:
+          INPUT_TAG: ${{ github.event.inputs.tag }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $tag = if ($env:INPUT_TAG) { $env:INPUT_TAG } else { $env:GITHUB_REF_NAME }
+          if ($tag -notmatch '^v\d+\.\d+\.\d+$') {
+            throw "Tag '$tag' is not a vX.Y.Z release tag."
+          }
+          $version = $tag -replace '^v', ''
+          $pubspec = (Select-String -Path pubspec.yaml -Pattern '^version:\s*(\S+)').Matches[0].Groups[1].Value
+          if ($pubspec -ne $version) {
+            throw "Tag $tag says $version but pubspec.yaml says $pubspec. Set pubspec.yaml to $version and retag."
+          }
+          $sha = (git rev-parse --short HEAD).Trim()
+
+          "tag=$tag" >> $env:GITHUB_OUTPUT
+          "version=$version" >> $env:GITHUB_OUTPUT
+          "sha=$sha" >> $env:GITHUB_OUTPUT
+          "base-name=AniMikan-v${version}_${sha}-windows-x64" >> $env:GITHUB_OUTPUT
+          "label-setup=AniMikan v${version}+${sha} (For windows_x64) Setup.exe" >> $env:GITHUB_OUTPUT
+          "label-zip=AniMikan v${version}+${sha} (For windows_x64).zip" >> $env:GITHUB_OUTPUT
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.44.3
+          channel: stable
+          cache: true
+
+      - name: Build and package
+        id: build
+        uses: ./.github/actions/build-windows
+        with:
+          version: ${{ steps.meta.outputs.version }}
+          base-name: ${{ steps.meta.outputs.base-name }}
+          changelog-args: --latest
+
+      - name: Publish
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.meta.outputs.tag }}
+          VERSION: ${{ steps.meta.outputs.version }}
+          SETUP: ${{ steps.build.outputs.setup-path }}
+          ZIP: ${{ steps.build.outputs.zip-path }}
+          NOTES: ${{ steps.build.outputs.notes-path }}
+          LABEL_SETUP: ${{ steps.meta.outputs.label-setup }}
+          LABEL_ZIP: ${{ steps.meta.outputs.label-zip }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          # Re-running on an existing tag replaces its assets instead of failing.
+          gh release view $env:TAG 2>$null | Out-Null
+          if ($LASTEXITCODE -eq 0) {
+            Write-Host "Release $env:TAG already exists — replacing its assets."
+            foreach ($asset in (gh release view $env:TAG --json assets --jq '.assets[].name')) {
+              gh release delete-asset $env:TAG $asset --yes
+            }
+            gh release edit $env:TAG --notes-file $env:NOTES --title "AniMikan v$env:VERSION" --latest
+          } else {
+            gh release create $env:TAG `
+              --title "AniMikan v$env:VERSION" `
+              --notes-file $env:NOTES `
+              --latest `
+              $env:SETUP $env:ZIP
+          }
+          gh release upload $env:TAG $env:SETUP $env:ZIP --clobber
+
+          # GitHub rewrites asset filenames containing spaces, '+', parentheses
+          # and friends, so the download name is kept boring and the friendly
+          # name the user actually reads goes in the asset label.
+          $repo = $env:GITHUB_REPOSITORY
+          foreach ($entry in @(
+            @{ File = $env:SETUP; Label = $env:LABEL_SETUP },
+            @{ File = $env:ZIP;   Label = $env:LABEL_ZIP }
+          )) {
+            $name = Split-Path $entry.File -Leaf
+            $id = gh api "repos/$repo/releases/tags/$env:TAG" `
+              --jq ".assets[] | select(.name == ""$name"") | .id"
+            if (-not $id) { throw "Asset $name missing from release $env:TAG" }
+            gh api -X PATCH "repos/$repo/releases/assets/$id" -f "label=$($entry.Label)" | Out-Null
+            Write-Host "$name -> $($entry.Label)"
+          }

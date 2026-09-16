@@ -1,0 +1,54 @@
+# git-cliff configuration — https://git-cliff.org/docs/configuration
+#
+# The release workflow renders the newest tag with `--latest`, the nightly
+# workflow renders everything since the last tag with `--unreleased`.
+
+[changelog]
+header = ""
+body = """
+{% if version %}\
+## {{ version | trim_start_matches(pat="v") }}
+{% else %}\
+## Unreleased
+{% endif %}\
+{% for group, commits in commits | group_by(attribute="group") %}
+### {{ group | striptags | trim }}
+{% for commit in commits %}\
+- {% if commit.scope %}**{{ commit.scope }}:** {% endif %}\
+{{ commit.message | split(pat="\n") | first | trim }}
+{% endfor %}{% endfor %}\n
+"""
+trim = true
+footer = ""
+
+[git]
+conventional_commits = true
+# Kept off so hand-written or reverted commits are listed rather than dropped.
+filter_unconventional = false
+split_commits = false
+protect_breaking_commits = false
+filter_commits = false
+tag_pattern = "v[0-9]*"
+sort_commits = "oldest"
+
+commit_parsers = [
+  { message = "^feat", group = "Features" },
+  { message = "^fix", group = "Bug Fixes" },
+  { message = "^perf", group = "Performance" },
+  { message = "^refactor", group = "Refactoring" },
+  { message = "^docs", group = "Documentation" },
+  { message = "^build", group = "Build" },
+  { message = "^style", group = "Styling" },
+  { message = "^test", group = "Testing" },
+  { message = "^ci", skip = true },
+  { message = "^chore\\(release\\)", skip = true },
+  { message = "^chore", group = "Miscellaneous" },
+  { message = "^Revert", group = "Reverts" },
+  # Catch-all: the first matching parser wins, so anything without a group
+  # above lands here instead of silently vanishing from the changelog.
+  { message = ".*", group = "Miscellaneous" },
+]
+
+[remote.github]
+owner = "gi-b716"
+repo = "AniMikan"

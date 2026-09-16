@@ -494,6 +494,48 @@ abstract class AppLocalizations {
   /// **'密码不能含 “;”，也不能以空格开头或结尾'**
   String get passwordInvalid;
 
+  /// No description provided for @sectionDebug.
+  ///
+  /// In zh, this message translates to:
+  /// **'调试'**
+  String get sectionDebug;
+
+  /// No description provided for @debugClearTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'清除所有数据'**
+  String get debugClearTitle;
+
+  /// No description provided for @debugClearSubtitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'清除设置并重启应用'**
+  String get debugClearSubtitle;
+
+  /// No description provided for @debugClearAction.
+  ///
+  /// In zh, this message translates to:
+  /// **'清除'**
+  String get debugClearAction;
+
+  /// No description provided for @debugClearConfirmTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'清除所有数据？'**
+  String get debugClearConfirmTitle;
+
+  /// No description provided for @debugClearConfirmBody.
+  ///
+  /// In zh, this message translates to:
+  /// **'所有设置会被删除，应用随后重启。此操作无法撤销。'**
+  String get debugClearConfirmBody;
+
+  /// No description provided for @cancel.
+  ///
+  /// In zh, this message translates to:
+  /// **'取消'**
+  String get cancel;
+
   /// No description provided for @proxyUnsupportedPlatform.
   ///
   /// In zh, this message translates to:

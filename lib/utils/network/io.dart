@@ -56,8 +56,15 @@ class _IoNetwork implements NetworkBackend {
 
   @override
   Future<SystemProxySource?> readSystemProxy() async {
-    if (Platform.isWindows) return _readWindowsProxy();
-    return _readEnvironmentProxy();
+    if (!Platform.isWindows) return _readEnvironmentProxy();
+
+    final registry = await _readWindowsProxy();
+    final usable =
+        registry != null &&
+        registry.enabled &&
+        (registry.server?.isNotEmpty ?? false);
+    if (usable) return registry;
+    return _readEnvironmentProxy() ?? registry;
   }
 
   @override

@@ -235,6 +235,28 @@ class AppLocalizationsEn extends AppLocalizations {
       'Password must not contain “;” or start or end with a space';
 
   @override
+  String get sectionDebug => 'Debug';
+
+  @override
+  String get debugClearTitle => 'Clear all data';
+
+  @override
+  String get debugClearSubtitle => 'Wipes the settings and restarts the app';
+
+  @override
+  String get debugClearAction => 'Clear';
+
+  @override
+  String get debugClearConfirmTitle => 'Clear all data?';
+
+  @override
+  String get debugClearConfirmBody =>
+      'Every setting will be deleted and the app will restart. This cannot be undone.';
+
+  @override
+  String get cancel => 'Cancel';
+
+  @override
   String get proxyUnsupportedPlatform =>
       'This platform can\'t report a system proxy; going direct';
 

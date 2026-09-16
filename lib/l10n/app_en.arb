@@ -74,6 +74,14 @@
   "usernameInvalid": "Username must not be empty or contain “:” or “@”",
   "passwordInvalid": "Password must not contain “;” or start or end with a space",
 
+  "sectionDebug": "Debug",
+  "debugClearTitle": "Clear all data",
+  "debugClearSubtitle": "Wipes the settings and restarts the app",
+  "debugClearAction": "Clear",
+  "debugClearConfirmTitle": "Clear all data?",
+  "debugClearConfirmBody": "Every setting will be deleted and the app will restart. This cannot be undone.",
+  "cancel": "Cancel",
+
   "proxyUnsupportedPlatform": "This platform can't report a system proxy; going direct",
   "proxyPacScript": "PAC script configured ({detail}) — not supported, going direct",
   "proxyDisabled": "No proxy enabled in the system; going direct",

@@ -2,7 +2,8 @@ import 'package:animikan/l10n/app_localizations.dart';
 import 'package:animikan/models/subject.dart';
 import 'package:animikan/settings/app.dart';
 import 'package:animikan/settings/proxy.dart';
-import 'package:flutter/material.dart' show ThemeMode;
+import 'package:flutter/material.dart'
+    show Locale, ThemeMode, WidgetsBinding, basicLocaleListResolution;
 
 /// Where the enums of the data and settings layers meet the ARB strings.
 ///
@@ -48,11 +49,16 @@ extension ThemeModeLabel on ThemeMode {
 
 extension LanguageLabel on Language {
   String label(AppLocalizations l) => switch (this) {
-    Language.system => l.systemDefault,
+    Language.system => lookupAppLocalizations(_detectedLocale()).systemDefault,
     Language.zh => l.languageZh,
     Language.en => l.languageEn,
   };
 }
+
+Locale _detectedLocale() => basicLocaleListResolution(
+  WidgetsBinding.instance.platformDispatcher.locales,
+  AppLocalizations.supportedLocales,
+);
 
 /// The sentence behind a [SystemProxyReason]; [detail] names the PAC URL or the
 /// address that could not be read.

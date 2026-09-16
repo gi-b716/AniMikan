@@ -1,0 +1,137 @@
+name: Nightly
+
+on:
+  schedule:
+    # 01:17 UTC — 09:17 in Beijing, so the date stamped into the version agrees
+    # with the local calendar day for the maintainer. Off the hour to avoid the
+    # top-of-hour rush.
+    - cron: '17 1 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: nightly
+  cancel-in-progress: false
+
+jobs:
+  nightly:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check for new commits
+        id: check
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $sha = (git rev-parse --short HEAD).Trim()
+          "sha=$sha" >> $env:GITHUB_OUTPUT
+
+          # The published commit is recorded in a marker the rendered release
+          # page hides, which survives every edit of the notes.
+          $body = (gh release view nightly --json body --jq .body 2>$null) -join "`n"
+          $previous = ''
+          if ($body -and $body -match '(?m)^<!-- nightly-sha:([0-9a-f]+) -->\r?$') {
+            $previous = $Matches[1]
+          }
+
+          if ($previous -eq $sha -and $env:GITHUB_EVENT_NAME -ne 'workflow_dispatch') {
+            Write-Host "HEAD ($sha) is already the published nightly — skipping."
+            "build=false" >> $env:GITHUB_OUTPUT
+          } else {
+            "build=true" >> $env:GITHUB_OUTPUT
+          }
+
+      - name: Resolve version
+        id: meta
+        if: steps.check.outputs.build == 'true'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $appVersion = (Select-String -Path pubspec.yaml -Pattern '^version:\s*(\S+)').Matches[0].Groups[1].Value
+          $sha = '${{ steps.check.outputs.sha }}'
+          $date = (Get-Date).ToUniversalTime().ToString('yyyyMMdd')
+
+          # Matches the nightly convention: a prerelease of the version
+          # currently in development, which sorts below that release and above
+          # the one before it.
+          $buildVersion = "$appVersion-nightly.$date"
+
+          "app-version=$appVersion" >> $env:GITHUB_OUTPUT
+          "build-version=$buildVersion" >> $env:GITHUB_OUTPUT
+          "base-name=AniMikan-v${appVersion}_${sha}-nightly.${date}-windows-x64" >> $env:GITHUB_OUTPUT
+          "label-setup=AniMikan v${buildVersion}+${sha} (nightly, For windows_x64) Setup.exe" >> $env:GITHUB_OUTPUT
+          "label-zip=AniMikan v${buildVersion}+${sha} (nightly, For windows_x64).zip" >> $env:GITHUB_OUTPUT
+
+      - uses: subosito/flutter-action@v2
+        if: steps.check.outputs.build == 'true'
+        with:
+          flutter-version: 3.44.3
+          channel: stable
+          cache: true
+
+      - name: Build and package
+        id: build
+        if: steps.check.outputs.build == 'true'
+        uses: ./.github/actions/build-windows
+        with:
+          version: ${{ steps.meta.outputs.build-version }}
+          base-name: ${{ steps.meta.outputs.base-name }}
+          changelog-args: --unreleased
+          notes-header: |
+            **Nightly build** — `${{ steps.meta.outputs.build-version }}` (`${{ steps.check.outputs.sha }}`)
+
+            Built automatically from `main` and untested. For a stable build, use the [latest release](https://github.com/${{ github.repository }}/releases/latest).
+
+            <!-- nightly-sha:${{ steps.check.outputs.sha }} -->
+
+      - name: Publish
+        if: steps.check.outputs.build == 'true'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BUILD_VERSION: ${{ steps.meta.outputs.build-version }}
+          SETUP: ${{ steps.build.outputs.setup-path }}
+          ZIP: ${{ steps.build.outputs.zip-path }}
+          NOTES: ${{ steps.build.outputs.notes-path }}
+          LABEL_SETUP: ${{ steps.meta.outputs.label-setup }}
+          LABEL_ZIP: ${{ steps.meta.outputs.label-zip }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $repo = $env:GITHUB_REPOSITORY
+
+          gh release view nightly 2>$null | Out-Null
+          if ($LASTEXITCODE -ne 0) {
+            gh release create nightly --prerelease --title 'Nightly' --notes 'Nightly builds of the main branch.'
+          }
+
+          # New assets first, so the release is never left empty if a step below
+          # fails. Deleting happens last for the same reason.
+          gh release upload nightly $env:SETUP $env:ZIP --clobber
+          gh release edit nightly --title "Nightly $env:BUILD_VERSION" --notes-file $env:NOTES
+
+          $keep = @((Split-Path $env:SETUP -Leaf), (Split-Path $env:ZIP -Leaf))
+          foreach ($asset in (gh release view nightly --json assets --jq '.assets[].name')) {
+            if ($keep -notcontains $asset) {
+              gh release delete-asset nightly $asset --yes
+              Write-Host "removed stale asset $asset"
+            }
+          }
+
+          foreach ($entry in @(
+            @{ File = $env:SETUP; Label = $env:LABEL_SETUP },
+            @{ File = $env:ZIP;   Label = $env:LABEL_ZIP }
+          )) {
+            $name = Split-Path $entry.File -Leaf
+            $id = gh api "repos/$repo/releases/tags/nightly" `
+              --jq ".assets[] | select(.name == ""$name"") | .id"
+            if (-not $id) { throw "Asset $name missing from the nightly release" }
+            gh api -X PATCH "repos/$repo/releases/assets/$id" -f "label=$($entry.Label)" | Out-Null
+            Write-Host "$name -> $($entry.Label)"
+          }

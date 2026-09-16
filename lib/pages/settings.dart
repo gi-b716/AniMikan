@@ -5,6 +5,7 @@ import 'package:animikan/l10n/app_localizations.dart';
 import 'package:animikan/l10n/labels.dart';
 import 'package:animikan/settings/app.dart';
 import 'package:animikan/utils/network/proxy.dart';
+import 'package:animikan/utils/restart/restart.dart';
 import 'package:animikan/widgets/app_shell.dart';
 import 'package:animikan/widgets/settings_list.dart';
 
@@ -56,10 +57,56 @@ class SettingsPage extends StatelessWidget {
                   ),
                 ],
               ),
+            // Wiping data means starting the app over, which only means
+            // something where there is a process to restart.
+            if (!kIsWeb)
+              SettingsSection(
+                l.sectionDebug,
+                children: [
+                  SettingsRow(
+                    icon: Icons.delete_forever_outlined,
+                    title: l.debugClearTitle,
+                    subtitle: l.debugClearSubtitle,
+                    trailing: TextButton(
+                      onPressed: () => _clearAllData(context),
+                      child: Text(l.debugClearAction),
+                    ),
+                    onTap: () => _clearAllData(context),
+                  ),
+                ],
+              ),
           ],
         ),
       ),
     );
+  }
+
+  /// Wipes everything this app has stored and starts over — hence the confirm.
+  Future<void> _clearAllData(BuildContext context) async {
+    final l = AppLocalizations.of(context);
+    final confirmed =
+        await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text(l.debugClearConfirmTitle),
+            content: Text(l.debugClearConfirmBody),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: Text(l.cancel),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                child: Text(l.debugClearAction),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+    if (!confirmed || !context.mounted) return;
+
+    await AppSettingsStore.instance.clearAll();
+    await restartApp();
   }
 
   Widget _themeChoices(AppLocalizations l, AppSettings settings) =>

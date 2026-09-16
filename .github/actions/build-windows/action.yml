@@ -1,0 +1,166 @@
+name: Build AniMikan for Windows
+description: >-
+  Builds the Flutter Windows release, packs the portable zip, compiles the Inno
+  Setup installer and renders a changelog. The release and nightly channels
+  both go through here so they ship byte-identical artifacts.
+
+inputs:
+  version:
+    description: Version stamped into the exe, e.g. 0.1.0 or 0.1.0-nightly.20260916.
+    required: true
+  base-name:
+    description: Filename stem shared by the zip and the installer, without extension.
+    required: true
+  changelog-args:
+    description: git-cliff range selector, e.g. --latest for a tag or --unreleased for nightly.
+    required: false
+    default: --latest
+  notes-header:
+    description: Markdown prepended to the rendered changelog.
+    required: false
+    default: ''
+  dist-dir:
+    description: Directory the artifacts are written to.
+    required: false
+    default: dist
+
+outputs:
+  setup-path:
+    description: Absolute path to the compiled installer.
+    value: ${{ steps.package.outputs.setup-path }}
+  zip-path:
+    description: Absolute path to the portable zip.
+    value: ${{ steps.package.outputs.zip-path }}
+  notes-path:
+    description: Absolute path to the rendered release notes.
+    value: ${{ steps.notes.outputs.notes-path }}
+
+runs:
+  using: composite
+  steps:
+    - name: Build
+      shell: pwsh
+      working-directory: ${{ github.workspace }}
+      env:
+        APP_VERSION: ${{ inputs.version }}
+      run: |
+        $ErrorActionPreference = 'Stop'
+        flutter pub get
+        flutter analyze
+
+        # No --build-number on purpose: the exe's FILEVERSION then mirrors
+        # pubspec (major.minor.patch.0) exactly, with no separate run counter
+        # to keep in sync.
+        flutter build windows --release "--build-name=$env:APP_VERSION"
+
+    - name: Package
+      id: package
+      shell: pwsh
+      working-directory: ${{ github.workspace }}
+      env:
+        APP_VERSION: ${{ inputs.version }}
+        BASE_NAME: ${{ inputs.base-name }}
+      run: |
+        $ErrorActionPreference = 'Stop'
+        $buildDir = (Resolve-Path 'build/windows/x64/runner/Release').Path
+        if (-not (Test-Path "$buildDir/animikan.exe")) {
+          throw "Flutter did not produce $buildDir/animikan.exe"
+        }
+
+        $dist = Join-Path $env:GITHUB_WORKSPACE ${{ inputs.dist-dir }}
+        New-Item -ItemType Directory -Force -Path $dist | Out-Null
+
+        # Portable zip. Everything goes under a single AniMikan\ folder so
+        # extracting it does not scatter ~200 files into the download folder.
+        $stage = Join-Path $env:RUNNER_TEMP 'portable'
+        Remove-Item -Recurse -Force $stage -ErrorAction SilentlyContinue
+        New-Item -ItemType Directory -Force -Path "$stage/AniMikan" | Out-Null
+        Copy-Item -Path "$buildDir/*" -Destination "$stage/AniMikan" -Recurse -Force
+
+        # Compress-Archive is very slow on the hundreds of small DLLs Flutter
+        # emits; 7z writing a plain .zip is far quicker and smaller.
+        $sevenZip = (Get-Command 7z -ErrorAction SilentlyContinue).Source
+        if (-not $sevenZip) { $sevenZip = 'C:\Program Files\7-Zip\7z.exe' }
+        if (-not (Test-Path $sevenZip)) { throw '7z.exe not found on this runner.' }
+
+        $zip = Join-Path $dist "$env:BASE_NAME.zip"
+        Push-Location $stage
+        try {
+          & $sevenZip a -tzip -bso0 -bsp0 $zip 'AniMikan'
+          if ($LASTEXITCODE -ne 0) { throw "7z exited with $LASTEXITCODE" }
+        } finally { Pop-Location }
+
+        # Installer. Prefer whatever the image already ships and only fall back
+        # to Chocolatey, whose community feed is a recurring source of 429s.
+        # The version is left open on purpose: 6 and 7 install side by side and
+        # the highest wins.
+        $findIscc = {
+          @(
+            Get-ChildItem -Path @($env:ProgramFiles, ${env:ProgramFiles(x86)}) `
+              -Directory -Filter 'Inno Setup *' -ErrorAction SilentlyContinue |
+              Sort-Object Name -Descending |
+              ForEach-Object { Join-Path $_.FullName 'ISCC.exe' }
+          ) | Where-Object { Test-Path $_ } | Select-Object -First 1
+        }
+        $iscc = & $findIscc
+        if (-not $iscc) {
+          choco install innosetup -y --no-progress | Out-Null
+          $iscc = & $findIscc
+        }
+        if (-not $iscc) { throw 'Inno Setup compiler (ISCC.exe) not found.' }
+        Write-Host "using $iscc"
+
+        # VersionInfoVersion only takes numbers, so a nightly's
+        # 0.1.0-nightly.20260916 is cut down to 0.1.0.0.
+        $parts = ($env:APP_VERSION -split '-')[0] -split '\.'
+        $quad = "$($parts[0]).$($parts[1]).$($parts[2]).0"
+
+        # None of these paths contain spaces on a GitHub runner, so they go
+        # through unquoted.
+        & $iscc `
+          "/DAppVersion=$env:APP_VERSION" `
+          "/DAppVersionQuad=$quad" `
+          "/DAppBuildDir=$buildDir" `
+          "/DOutputDir=$dist" `
+          "/DOutputBaseFilename=$env:BASE_NAME-setup" `
+          'installer/animikan.iss'
+        if ($LASTEXITCODE -ne 0) { throw "ISCC exited with $LASTEXITCODE" }
+
+        $setup = Join-Path $dist "$env:BASE_NAME-setup.exe"
+        if (-not (Test-Path $setup)) { throw "Installer was not produced at $setup" }
+
+        "setup-path=$setup" >> $env:GITHUB_OUTPUT
+        "zip-path=$zip" >> $env:GITHUB_OUTPUT
+        Write-Host "setup: $setup"
+        Write-Host "zip:   $zip"
+
+    - name: Render changelog
+      id: notes
+      shell: pwsh
+      working-directory: ${{ github.workspace }}
+      env:
+        NOTES_HEADER: ${{ inputs.notes-header }}
+        CLIFF_ARGS: ${{ inputs.changelog-args }}
+      run: |
+        $ErrorActionPreference = 'Stop'
+        $cliffVersion = '2.14.1'
+        $cliffDir = Join-Path $env:RUNNER_TEMP 'git-cliff'
+        New-Item -ItemType Directory -Force -Path $cliffDir | Out-Null
+        $cliffZip = Join-Path $env:RUNNER_TEMP 'git-cliff.zip'
+        Invoke-WebRequest `
+          -Uri "https://github.com/orhun/git-cliff/releases/download/v$cliffVersion/git-cliff-$cliffVersion-x86_64-pc-windows-msvc.zip" `
+          -OutFile $cliffZip
+        Expand-Archive -Path $cliffZip -DestinationPath $cliffDir -Force
+        $cliff = Get-ChildItem -Path $cliffDir -Recurse -Filter 'git-cliff.exe' | Select-Object -First 1
+        if (-not $cliff) { throw 'git-cliff.exe missing from the release archive.' }
+
+        $notes = Join-Path $env:GITHUB_WORKSPACE 'RELEASE_NOTES.md'
+        # fetch-depth: 0 in the caller is what makes the full history available.
+        $header = if ($env:NOTES_HEADER) { $env:NOTES_HEADER + "`n`n" } else { '' }
+        $cliffArgs = $env:CLIFF_ARGS -split '\s+' | Where-Object { $_ }
+        $header + (& $cliff.FullName --config cliff.toml @cliffArgs --strip header) |
+          Set-Content -Path $notes -Encoding utf8
+        if ($LASTEXITCODE -ne 0) { throw "git-cliff exited with $LASTEXITCODE" }
+
+        "notes-path=$notes" >> $env:GITHUB_OUTPUT
+        Write-Host "notes: $notes"

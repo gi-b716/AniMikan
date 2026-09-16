@@ -25,7 +25,7 @@ enum Language {
 class AppSettings {
   const AppSettings({
     this.themeMode = ThemeMode.system,
-    this.proxyMode = ProxyMode.direct,
+    this.proxyMode = ProxyMode.system,
     this.customProxy,
     this.language = Language.system,
   });
@@ -33,7 +33,7 @@ class AppSettings {
   /// Anything unreadable falls back to the default rather than failing the load.
   factory AppSettings.fromJson(Map<String, dynamic> json) => AppSettings(
     themeMode: _oneOf(ThemeMode.values, json['themeMode'], ThemeMode.system),
-    proxyMode: _oneOf(ProxyMode.values, json['proxyMode'], ProxyMode.direct),
+    proxyMode: _oneOf(ProxyMode.values, json['proxyMode'], ProxyMode.system),
     customProxy: _proxy(json['customProxy']),
     language: _oneOf(Language.values, json['language'], Language.system),
   );
@@ -125,6 +125,15 @@ class AppSettingsStore extends ValueNotifier<AppSettings> {
     }
     value = settings;
     await _apply(settings);
+  }
+
+  Future<void> clearAll() async {
+    try {
+      await _storage.clear();
+    } catch (_) {
+      // pass
+    }
+    value = const AppSettings();
   }
 
   Future<void> setThemeMode(ThemeMode mode) =>
