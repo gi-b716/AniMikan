@@ -44,10 +44,6 @@ runs:
         $ErrorActionPreference = 'Stop'
         flutter pub get
         flutter analyze
-
-        # No --build-number on purpose: the exe's FILEVERSION then mirrors
-        # pubspec (major.minor.patch.0) exactly, with no separate run counter
-        # to keep in sync.
         flutter build windows --release "--build-name=$env:APP_VERSION"
 
     - name: Package
@@ -67,15 +63,11 @@ runs:
         $dist = Join-Path $env:GITHUB_WORKSPACE ${{ inputs.dist-dir }}
         New-Item -ItemType Directory -Force -Path $dist | Out-Null
 
-        # Portable zip. Everything goes under a single AniMikan\ folder so
-        # extracting it does not scatter ~200 files into the download folder.
         $stage = Join-Path $env:RUNNER_TEMP 'portable'
         Remove-Item -Recurse -Force $stage -ErrorAction SilentlyContinue
         New-Item -ItemType Directory -Force -Path "$stage/AniMikan" | Out-Null
         Copy-Item -Path "$buildDir/*" -Destination "$stage/AniMikan" -Recurse -Force
 
-        # Compress-Archive is very slow on the hundreds of small DLLs Flutter
-        # emits; 7z writing a plain .zip is far quicker and smaller.
         $sevenZip = (Get-Command 7z -ErrorAction SilentlyContinue).Source
         if (-not $sevenZip) { $sevenZip = 'C:\Program Files\7-Zip\7z.exe' }
         if (-not (Test-Path $sevenZip)) { throw '7z.exe not found on this runner.' }
@@ -87,10 +79,6 @@ runs:
           if ($LASTEXITCODE -ne 0) { throw "7z exited with $LASTEXITCODE" }
         } finally { Pop-Location }
 
-        # Installer. Prefer whatever the image already ships and only fall back
-        # to Chocolatey, whose community feed is a recurring source of 429s.
-        # The version is left open on purpose: 6 and 7 install side by side and
-        # the highest wins.
         $findIscc = {
           @(
             Get-ChildItem -Path @($env:ProgramFiles, ${env:ProgramFiles(x86)}) `
@@ -107,13 +95,9 @@ runs:
         if (-not $iscc) { throw 'Inno Setup compiler (ISCC.exe) not found.' }
         Write-Host "using $iscc"
 
-        # VersionInfoVersion only takes numbers, so a nightly's
-        # 0.1.0-nightly.20260916 is cut down to 0.1.0.0.
         $parts = ($env:APP_VERSION -split '-')[0] -split '\.'
         $quad = "$($parts[0]).$($parts[1]).$($parts[2]).0"
 
-        # None of these paths contain spaces on a GitHub runner, so they go
-        # through unquoted.
         & $iscc `
           "/DAppVersion=$env:APP_VERSION" `
           "/DAppVersionQuad=$quad" `

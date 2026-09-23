@@ -43,19 +43,11 @@ runs:
 
         $notes = Join-Path $env:GITHUB_WORKSPACE 'RELEASE_NOTES.md'
 
-        # @() is load-bearing: a pipeline yielding one item assigns a String,
-        # and splatting a String to a native command passes a bare "-".
         $cliffArgs = @($env:CLIFF_ARGS -split '\s+' | Where-Object { $_ })
 
-        # The caller checks out with fetch-depth: 0, which is what makes the
-        # full history available here.
         $body = & $cliff.FullName --config cliff.toml @cliffArgs --strip header
         if ($LASTEXITCODE -ne 0) { throw "git-cliff exited with $LASTEXITCODE" }
 
-        # Header and body stay separate elements of one array. `$header + $body`
-        # would stringify the body instead: PowerShell's + joins the right-hand
-        # array with $OFS (a space) when the left side is a String, flattening
-        # the entire changelog onto one line.
         $lines = @()
         if ($env:NOTES_HEADER) { $lines += $env:NOTES_HEADER, '' }
         $lines += $body

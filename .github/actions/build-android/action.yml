@@ -1,0 +1,62 @@
+name: Build AniMikan for Android
+description: >-
+  Builds the Flutter Android release APK for sideloading. The APK is signed with
+  the debug key, since no release keystore is configured in android/app.
+
+inputs:
+  version:
+    description: Version stamped into the APK, e.g. 0.1.0 or 0.1.0-nightly.20260916.
+    required: true
+  base-name:
+    description: Filename stem, without extension.
+    required: true
+  dist-dir:
+    description: Directory the artifact is written to.
+    required: false
+    default: dist
+
+outputs:
+  apk-path:
+    description: Absolute path to the APK.
+    value: ${{ steps.package.outputs.apk-path }}
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-java@v4
+      with:
+        distribution: temurin
+        java-version: '17'
+
+    - name: Build
+      shell: bash
+      working-directory: ${{ github.workspace }}
+      env:
+        APP_VERSION: ${{ inputs.version }}
+      run: |
+        set -euo pipefail
+        flutter pub get
+        flutter analyze
+        flutter build apk --release --build-name="$APP_VERSION"
+
+    - name: Package
+      id: package
+      shell: bash
+      working-directory: ${{ github.workspace }}
+      env:
+        BASE_NAME: ${{ inputs.base-name }}
+      run: |
+        set -euo pipefail
+        apk=build/app/outputs/flutter-apk/app-release.apk
+        if [ ! -f "$apk" ]; then
+          echo "Flutter did not produce $apk" >&2
+          exit 1
+        fi
+
+        dist="$GITHUB_WORKSPACE/${{ inputs.dist-dir }}"
+        mkdir -p "$dist"
+        out="$dist/$BASE_NAME.apk"
+        cp "$apk" "$out"
+
+        echo "apk-path=$out" >> "$GITHUB_OUTPUT"
+        echo "apk: $out"

@@ -40,9 +40,6 @@ runs:
         set -euo pipefail
         flutter pub get
         flutter analyze
-
-        # No --build-number, matching Windows: the version comes from pubspec
-        # alone, so there is no separate counter to keep in sync.
         flutter build linux --release --build-name="$APP_VERSION"
 
     - name: Package
@@ -59,8 +56,6 @@ runs:
           exit 1
         fi
 
-        # Everything under one AniMikan/ folder, so extracting does not scatter
-        # the bundle across the download directory.
         stage="$RUNNER_TEMP/portable"
         rm -rf "$stage"
         mkdir -p "$stage/AniMikan"

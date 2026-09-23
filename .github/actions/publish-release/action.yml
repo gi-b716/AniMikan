@@ -1,0 +1,104 @@
+name: Publish GitHub release
+description: >-
+  Uploads the built artifacts to a GitHub release, renames them to friendly
+  asset labels, and prunes assets left over from a previous build.
+
+inputs:
+  tag:
+    description: Release tag, e.g. v0.1.0, or `nightly` for the rolling prerelease.
+    required: true
+  title:
+    description: Release title.
+    required: true
+  notes-file:
+    description: Path to the rendered release notes.
+    required: true
+  asset-prefix:
+    description: Filename stem the build produced, without the per-file suffix.
+    required: true
+  version:
+    description: Human version shown in the asset labels, e.g. 0.1.0 or 0.1.0-nightly.20260916.
+    required: true
+  sha:
+    description: Short commit the build came from, shown in the asset labels.
+    required: true
+  nightly:
+    description: 'true for the rolling nightly: mark the release prerelease and tag labels with "nightly".'
+    required: false
+    default: 'false'
+  dist-dir:
+    description: Directory the artifacts were downloaded to.
+    required: false
+    default: dist
+
+runs:
+  using: composite
+  steps:
+    - name: Publish
+      shell: pwsh
+      working-directory: ${{ github.workspace }}
+      env:
+        GH_TOKEN: ${{ github.token }}
+        TAG: ${{ inputs.tag }}
+        TITLE: ${{ inputs.title }}
+        NOTES: ${{ inputs.notes-file }}
+        PREFIX: ${{ inputs.asset-prefix }}
+        VERSION: ${{ inputs.version }}
+        SHA: ${{ inputs.sha }}
+        NIGHTLY: ${{ inputs.nightly }}
+        DIST: ${{ inputs.dist-dir }}
+      run: |
+        $ErrorActionPreference = 'Stop'
+
+        $version = $env:VERSION
+        $sha     = $env:SHA
+        $prefix  = $env:PREFIX
+        $tag     = $env:TAG
+        $nightly = $env:NIGHTLY -eq 'true'
+        $channel = if ($nightly) { 'nightly, ' } else { '' }
+
+        $assets = @(
+          @{ Name = "$prefix-windows-x64-setup.exe"; Label = "AniMikan v$version+$sha ($($channel)For windows_x64) Setup.exe" }
+          @{ Name = "$prefix-windows-x64.zip";       Label = "AniMikan v$version+$sha ($($channel)For windows_x64).zip" }
+          @{ Name = "$prefix-linux-x64.tar.gz";      Label = "AniMikan v$version+$sha ($($channel)For linux_x64).tar.gz" }
+          @{ Name = "$prefix-android.apk";           Label = "AniMikan v$version+$sha ($($channel)For android).apk" }
+        )
+
+        $paths = foreach ($a in $assets) {
+          $p = Join-Path $env:DIST $a.Name
+          if (-not (Test-Path $p)) { throw "The build matrix did not produce $($a.Name)" }
+          $p
+        }
+
+        $exists = $false
+        try { gh release view $tag 2>$null | Out-Null; $exists = $LASTEXITCODE -eq 0 } catch { }
+        $global:LASTEXITCODE = 0
+
+        if ($exists) {
+          $edit = @('release', 'edit', $tag, '--title', $env:TITLE, '--notes-file', $env:NOTES)
+          if (-not $nightly) { $edit += '--latest' }
+          gh @edit
+        } else {
+          $create = @('release', 'create', $tag, '--title', $env:TITLE, '--notes-file', $env:NOTES)
+          $create += if ($nightly) { '--prerelease' } else { '--latest' }
+          gh @create
+        }
+
+        gh release upload $tag @paths --clobber
+
+        $keep = $assets.Name
+        foreach ($asset in (gh release view $tag --json assets --jq '.assets[].name')) {
+          if ($keep -notcontains $asset) {
+            gh release delete-asset $tag $asset --yes
+            Write-Host "removed stale asset $asset"
+          }
+        }
+
+        $repo = $env:GITHUB_REPOSITORY
+        foreach ($a in $assets) {
+          $id = gh api "repos/$repo/releases/tags/$tag" `
+            --jq ".assets[] | select(.name == ""$($a.Name)"") | .id"
+          if (-not $id) { throw "Asset $($a.Name) missing from release $tag" }
+          gh api -X PATCH "repos/$repo/releases/assets/$id" -f "label=$($a.Label)" | Out-Null
+          Write-Host "$($a.Name) -> $($a.Label)"
+        }
