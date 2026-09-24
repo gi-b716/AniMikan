@@ -70,6 +70,11 @@ runs:
           $p
         }
 
+        if ($nightly) {
+          git tag -f $tag
+          git push -f origin "refs/tags/$tag"
+        }
+
         $exists = $false
         try { gh release view $tag 2>$null | Out-Null; $exists = $LASTEXITCODE -eq 0 } catch { }
         $global:LASTEXITCODE = 0
