@@ -252,6 +252,76 @@ class AppLocalizationsZh extends AppLocalizations {
   String get cancel => '取消';
 
   @override
+  String get accountTitle => 'Bangumi 账号';
+
+  @override
+  String get accountSignInTitle => '登录 Bangumi';
+
+  @override
+  String get accountSignInDescription => '点击登录后会打开浏览器完成 Cloudflare 人机验证。';
+
+  @override
+  String get accountEmailLabel => '邮箱';
+
+  @override
+  String get accountPasswordLabel => '密码';
+
+  @override
+  String get accountSignIn => '登录';
+
+  @override
+  String get accountEmailRequired => '请填写邮箱';
+
+  @override
+  String get accountPasswordRequired => '请填写密码';
+
+  @override
+  String get accountWaitingForBrowser => '等待浏览器完成验证…';
+
+  @override
+  String get accountCancelWaiting => '取消等待';
+
+  @override
+  String get accountSignInCancelled => '已取消登录';
+
+  @override
+  String get accountSignInTimeout => '等待验证超时，请重试';
+
+  @override
+  String get accountBrowserFailed => '打不开浏览器';
+
+  @override
+  String get accountUnsupportedPlatform =>
+      '网页版登录不了：Bangumi 的接口不返回 CORS 头，浏览器拿不到会话；它的 Turnstile 页面也禁止被内嵌。请用桌面端登录。';
+
+  @override
+  String get accountBadCredentials => '邮箱或密码不正确';
+
+  @override
+  String get accountRateLimited => '尝试次数过多，请稍后再试';
+
+  @override
+  String accountNetworkFailed(String detail) {
+    return '网络错误：$detail';
+  }
+
+  @override
+  String accountSignedInAs(String nickname) {
+    return '已登录为 $nickname';
+  }
+
+  @override
+  String get accountSignedOut => '已退出登录';
+
+  @override
+  String get accountSignOut => '退出登录';
+
+  @override
+  String accountUid(String id) {
+    return 'UID $id';
+  }
+
+  @override
   String get proxyUnsupportedPlatform => '当前平台无法自动检测系统代理，将直连';
 
   @override

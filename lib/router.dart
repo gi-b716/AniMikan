@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import 'package:animikan/l10n/app_localizations.dart';
 import 'package:animikan/models/subject.dart';
+import 'package:animikan/pages/account.dart';
 import 'package:animikan/pages/calendar.dart';
 import 'package:animikan/pages/settings.dart';
 import 'package:animikan/pages/subject_detail.dart';
@@ -15,6 +16,7 @@ abstract final class AppRoute {
   static const cache = '/cache';
   static const test = '/test';
   static const settings = '/settings';
+  static const account = '/account';
   static const subjectPath = '/subject/:subjectId';
 
   static String subject(int subjectId) => '/subject/$subjectId';
@@ -105,6 +107,11 @@ GoRouter createRouter({required bool isMaximized, VoidCallback? onSearch}) {
             ],
           ),
         ],
+      ),
+      GoRoute(
+        parentNavigatorKey: rootNavigatorKey,
+        path: AppRoute.account,
+        builder: (_, _) => const AccountPage(),
       ),
       GoRoute(
         parentNavigatorKey: rootNavigatorKey,

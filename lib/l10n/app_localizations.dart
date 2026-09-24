@@ -536,6 +536,132 @@ abstract class AppLocalizations {
   /// **'取消'**
   String get cancel;
 
+  /// No description provided for @accountTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'Bangumi 账号'**
+  String get accountTitle;
+
+  /// No description provided for @accountSignInTitle.
+  ///
+  /// In zh, this message translates to:
+  /// **'登录 Bangumi'**
+  String get accountSignInTitle;
+
+  /// No description provided for @accountSignInDescription.
+  ///
+  /// In zh, this message translates to:
+  /// **'点击登录后会打开浏览器完成 Cloudflare 人机验证。'**
+  String get accountSignInDescription;
+
+  /// No description provided for @accountEmailLabel.
+  ///
+  /// In zh, this message translates to:
+  /// **'邮箱'**
+  String get accountEmailLabel;
+
+  /// No description provided for @accountPasswordLabel.
+  ///
+  /// In zh, this message translates to:
+  /// **'密码'**
+  String get accountPasswordLabel;
+
+  /// No description provided for @accountSignIn.
+  ///
+  /// In zh, this message translates to:
+  /// **'登录'**
+  String get accountSignIn;
+
+  /// No description provided for @accountEmailRequired.
+  ///
+  /// In zh, this message translates to:
+  /// **'请填写邮箱'**
+  String get accountEmailRequired;
+
+  /// No description provided for @accountPasswordRequired.
+  ///
+  /// In zh, this message translates to:
+  /// **'请填写密码'**
+  String get accountPasswordRequired;
+
+  /// No description provided for @accountWaitingForBrowser.
+  ///
+  /// In zh, this message translates to:
+  /// **'等待浏览器完成验证…'**
+  String get accountWaitingForBrowser;
+
+  /// No description provided for @accountCancelWaiting.
+  ///
+  /// In zh, this message translates to:
+  /// **'取消等待'**
+  String get accountCancelWaiting;
+
+  /// No description provided for @accountSignInCancelled.
+  ///
+  /// In zh, this message translates to:
+  /// **'已取消登录'**
+  String get accountSignInCancelled;
+
+  /// No description provided for @accountSignInTimeout.
+  ///
+  /// In zh, this message translates to:
+  /// **'等待验证超时，请重试'**
+  String get accountSignInTimeout;
+
+  /// No description provided for @accountBrowserFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'打不开浏览器'**
+  String get accountBrowserFailed;
+
+  /// No description provided for @accountUnsupportedPlatform.
+  ///
+  /// In zh, this message translates to:
+  /// **'网页版登录不了：Bangumi 的接口不返回 CORS 头，浏览器拿不到会话；它的 Turnstile 页面也禁止被内嵌。请用桌面端登录。'**
+  String get accountUnsupportedPlatform;
+
+  /// No description provided for @accountBadCredentials.
+  ///
+  /// In zh, this message translates to:
+  /// **'邮箱或密码不正确'**
+  String get accountBadCredentials;
+
+  /// No description provided for @accountRateLimited.
+  ///
+  /// In zh, this message translates to:
+  /// **'尝试次数过多，请稍后再试'**
+  String get accountRateLimited;
+
+  /// No description provided for @accountNetworkFailed.
+  ///
+  /// In zh, this message translates to:
+  /// **'网络错误：{detail}'**
+  String accountNetworkFailed(String detail);
+
+  /// No description provided for @accountSignedInAs.
+  ///
+  /// In zh, this message translates to:
+  /// **'已登录为 {nickname}'**
+  String accountSignedInAs(String nickname);
+
+  /// No description provided for @accountSignedOut.
+  ///
+  /// In zh, this message translates to:
+  /// **'已退出登录'**
+  String get accountSignedOut;
+
+  /// No description provided for @accountSignOut.
+  ///
+  /// In zh, this message translates to:
+  /// **'退出登录'**
+  String get accountSignOut;
+
+  /// No description provided for @accountUid.
+  ///
+  /// In zh, this message translates to:
+  /// **'UID {id}'**
+  String accountUid(String id);
+
   /// No description provided for @proxyUnsupportedPlatform.
   ///
   /// In zh, this message translates to:

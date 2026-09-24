@@ -124,7 +124,7 @@ class AppSettingsStore extends ValueNotifier<AppSettings> {
       // pass
     }
     value = settings;
-    await _apply(settings);
+    await _apply(value);
   }
 
   Future<void> clearAll() async {

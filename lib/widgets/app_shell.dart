@@ -6,6 +6,8 @@ import 'package:window_manager/window_manager.dart';
 
 import 'package:animikan/l10n/app_localizations.dart';
 import 'package:animikan/utils/platform.dart';
+import 'package:animikan/widgets/app_top_bar.dart';
+import 'package:animikan/widgets/user_avatar.dart';
 
 final rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'rootNavigator');
 
@@ -60,88 +62,6 @@ class AppShellScope extends InheritedWidget {
       sync != oldWidget.sync || activeLocation != oldWidget.activeLocation;
 }
 
-class _WindowButtons extends StatelessWidget {
-  final bool isMaximized;
-  const _WindowButtons({required this.isMaximized});
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    const sz = 14.0;
-    final c = cs.onSurface;
-    final h = cs.onSurface.withValues(alpha: 0.1);
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        _TitleBarButton(
-          icon: Icons.horizontal_rule_rounded,
-          size: sz,
-          color: c,
-          hoverColor: h,
-          onPressed: () => windowManager.minimize(),
-        ),
-        _TitleBarButton(
-          icon: isMaximized
-              ? Icons.filter_none_rounded
-              : Icons.crop_square_rounded,
-          size: sz + 2,
-          color: c,
-          hoverColor: h,
-          onPressed: () => isMaximized
-              ? windowManager.unmaximize()
-              : windowManager.maximize(),
-        ),
-        _TitleBarButton(
-          icon: Icons.close_rounded,
-          size: sz + 2,
-          color: c,
-          hoverColor: const Color(0xFFC42B1C),
-          onPressed: () => windowManager.close(),
-        ),
-      ],
-    );
-  }
-}
-
-class _TitleBarButton extends StatefulWidget {
-  final IconData icon;
-  final double size;
-  final Color color;
-  final VoidCallback onPressed;
-  final Color hoverColor;
-  const _TitleBarButton({
-    required this.icon,
-    required this.size,
-    required this.color,
-    required this.onPressed,
-    required this.hoverColor,
-  });
-  @override
-  State<_TitleBarButton> createState() => _TitleBarButtonState();
-}
-
-class _TitleBarButtonState extends State<_TitleBarButton> {
-  bool _h = false;
-  @override
-  Widget build(BuildContext context) => MouseRegion(
-    onEnter: (_) => setState(() => _h = true),
-    onExit: (_) => setState(() => _h = false),
-    child: Container(
-      width: 38,
-      height: 38,
-      color: _h ? widget.hoverColor : Colors.transparent,
-      child: InkWell(
-        onTap: widget.onPressed,
-        splashColor: Colors.transparent,
-        highlightColor: Colors.transparent,
-        child: Center(
-          child: Icon(widget.icon, size: widget.size, color: widget.color),
-        ),
-      ),
-    ),
-  );
-}
-
 class AppShell extends StatefulWidget {
   final StatefulNavigationShell navigationShell;
   final List<TabConfig> tabs;
@@ -161,8 +81,6 @@ class AppShell extends StatefulWidget {
 }
 
 class _AppShellState extends State<AppShell> with WindowListener {
-  static const _barH = 38.0;
-
   /// The width of the resize border Windows draws around a window, in physical
   /// pixels — the same 8 that `window_manager_plugin.cpp` keeps for itself in
   /// its `WM_NCCALCSIZE` handling.
@@ -284,15 +202,22 @@ class _AppShellState extends State<AppShell> with WindowListener {
             groupAlignment: 1.0,
             backgroundColor: cs.surfaceContainerHigh,
             leading: Padding(
-              padding: const EdgeInsets.only(top: 12, bottom: 24),
-              child: FloatingActionButton(
-                elevation: 0,
-                heroTag: 'search',
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                onPressed: widget.onSearchPressed,
-                child: const Icon(Icons.search, size: 28),
+              padding: const EdgeInsets.only(top: 8, bottom: 12),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  FloatingActionButton(
+                    elevation: 0,
+                    heroTag: 'search',
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    onPressed: widget.onSearchPressed,
+                    child: const Icon(Icons.search, size: 28),
+                  ),
+                  const SizedBox(height: 12),
+                  const UserAvatarButton(),
+                ],
               ),
             ),
             destinations: [
@@ -330,7 +255,11 @@ class _AppShellState extends State<AppShell> with WindowListener {
     return Scaffold(
       body: Column(
         children: [
-          _topBar(),
+          AppTopBar(
+            title: _currentTitle(l),
+            onBack: _canPop ? () => GoRouter.of(context).pop() : null,
+            trailing: const UserAvatarButton(size: 30),
+          ),
           Expanded(child: page),
         ],
       ),
@@ -349,52 +278,12 @@ class _AppShellState extends State<AppShell> with WindowListener {
     );
   }
 
-  Widget _backRow() {
-    final cs = Theme.of(context).colorScheme;
-    return Row(
-      children: [
-        if (_canPop)
-          SizedBox(
-            width: _barH,
-            child: IconButton(
-              icon: const Icon(Icons.arrow_back_rounded, size: 18),
-              onPressed: () => GoRouter.of(context).pop(),
-              padding: EdgeInsets.zero,
-              splashRadius: 14,
-              color: cs.onSurface.withValues(alpha: 0.7),
-            ),
-          ),
-        SizedBox(width: _canPop ? 4.0 : 16.0),
-        Text(
-          _currentTitle(AppLocalizations.of(context)),
-          style: TextStyle(
-            fontSize: 13,
-            color: cs.onSurface.withValues(alpha: 0.7),
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ],
-    );
-  }
-
   Widget _topBar() {
     if (!_canPop && !_desktop) return const SizedBox.shrink();
 
-    final bar = SizedBox(height: _barH, child: _backRow());
-    if (!_desktop) return bar;
-
-    return SizedBox(
-      height: _barH,
-      child: Stack(
-        children: [
-          Positioned.fill(child: DragToMoveArea(child: bar)),
-          Positioned(
-            top: 0,
-            right: 0,
-            child: _WindowButtons(isMaximized: _maximized),
-          ),
-        ],
-      ),
+    return AppTopBar(
+      title: _currentTitle(AppLocalizations.of(context)),
+      onBack: _canPop ? () => GoRouter.of(context).pop() : null,
     );
   }
 }

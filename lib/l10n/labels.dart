@@ -1,5 +1,6 @@
 import 'package:animikan/l10n/app_localizations.dart';
 import 'package:animikan/models/subject.dart';
+import 'package:animikan/services/auth.dart';
 import 'package:animikan/settings/app.dart';
 import 'package:animikan/settings/proxy.dart';
 import 'package:flutter/material.dart'
@@ -59,6 +60,17 @@ Locale _detectedLocale() => basicLocaleListResolution(
   WidgetsBinding.instance.platformDispatcher.locales,
   AppLocalizations.supportedLocales,
 );
+
+String loginFailureText(AppLocalizations l, LoginException error) =>
+    switch (error.failure) {
+      LoginFailure.cancelled => l.accountSignInCancelled,
+      LoginFailure.timeout => l.accountSignInTimeout,
+      LoginFailure.browser => l.accountBrowserFailed,
+      LoginFailure.unsupported => l.accountUnsupportedPlatform,
+      LoginFailure.credentials => l.accountBadCredentials,
+      LoginFailure.rateLimited => l.accountRateLimited,
+      LoginFailure.network => l.accountNetworkFailed(error.detail ?? ''),
+    };
 
 /// The sentence behind a [SystemProxyReason]; [detail] names the PAC URL or the
 /// address that could not be read.

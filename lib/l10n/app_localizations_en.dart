@@ -257,6 +257,77 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cancel => 'Cancel';
 
   @override
+  String get accountTitle => 'Bangumi account';
+
+  @override
+  String get accountSignInTitle => 'Sign in to Bangumi';
+
+  @override
+  String get accountSignInDescription =>
+      'Signing in opens your browser to solve a Cloudflare challenge.';
+
+  @override
+  String get accountEmailLabel => 'Email';
+
+  @override
+  String get accountPasswordLabel => 'Password';
+
+  @override
+  String get accountSignIn => 'Sign in';
+
+  @override
+  String get accountEmailRequired => 'Enter your email';
+
+  @override
+  String get accountPasswordRequired => 'Enter your password';
+
+  @override
+  String get accountWaitingForBrowser => 'Waiting for the browser…';
+
+  @override
+  String get accountCancelWaiting => 'Stop waiting';
+
+  @override
+  String get accountSignInCancelled => 'Sign-in cancelled';
+
+  @override
+  String get accountSignInTimeout => 'Timed out waiting for the browser';
+
+  @override
+  String get accountBrowserFailed => 'Couldn\'t open a browser';
+
+  @override
+  String get accountUnsupportedPlatform =>
+      'Signing in is not possible from a browser: Bangumi\'s API sends no CORS headers, so it can never hand out a session, and its Turnstile page refuses to be framed. Use the desktop app.';
+
+  @override
+  String get accountBadCredentials => 'Wrong email or password';
+
+  @override
+  String get accountRateLimited => 'Too many attempts — try again later';
+
+  @override
+  String accountNetworkFailed(String detail) {
+    return 'Network error: $detail';
+  }
+
+  @override
+  String accountSignedInAs(String nickname) {
+    return 'Signed in as $nickname';
+  }
+
+  @override
+  String get accountSignedOut => 'Signed out';
+
+  @override
+  String get accountSignOut => 'Sign out';
+
+  @override
+  String accountUid(String id) {
+    return 'UID $id';
+  }
+
+  @override
   String get proxyUnsupportedPlatform =>
       'This platform can\'t report a system proxy; going direct';
 

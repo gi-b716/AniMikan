@@ -5,9 +5,11 @@ import 'package:window_manager/window_manager.dart';
 import 'package:animikan/config.dart';
 import 'package:animikan/l10n/app_localizations.dart';
 import 'package:animikan/router.dart';
+import 'package:animikan/services/auth.dart';
 import 'package:animikan/settings/app.dart';
 import 'package:animikan/theme.dart';
 import 'package:animikan/utils/platform.dart';
+import 'package:animikan/utils/url_scheme/url_scheme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -15,6 +17,10 @@ void main() async {
   await AppSettingsStore.instance.load();
 
   await BangumiConst.init();
+
+  await registerUrlScheme();
+
+  await BangumiAuth.instance.load();
 
   bool isMaximized = false;
   if (isDesktop()) {

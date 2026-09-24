@@ -19,6 +19,9 @@ dependencies:
   ratings_plus: ^1.0.0
   go_router: ^17.3.0
   shared_preferences: ^2.5.5
+  app_links: ^7.2.1
+  url_launcher: ^6.3.2
+  flutter_svg: ^2.3.0
 
 dev_dependencies:
   flutter_test:
@@ -28,3 +31,5 @@ dev_dependencies:
 flutter:
   generate: true
   uses-material-design: true
+  assets:
+    - assets/images/

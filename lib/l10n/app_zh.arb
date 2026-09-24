@@ -126,6 +126,43 @@
   "debugClearConfirmBody": "所有设置会被删除，应用随后重启。此操作无法撤销。",
   "cancel": "取消",
 
+  "accountTitle": "Bangumi 账号",
+  "accountSignInTitle": "登录 Bangumi",
+  "accountSignInDescription": "点击登录后会打开浏览器完成 Cloudflare 人机验证。",
+  "accountEmailLabel": "邮箱",
+  "accountPasswordLabel": "密码",
+  "accountSignIn": "登录",
+  "accountEmailRequired": "请填写邮箱",
+  "accountPasswordRequired": "请填写密码",
+  "accountWaitingForBrowser": "等待浏览器完成验证…",
+  "accountCancelWaiting": "取消等待",
+  "accountSignInCancelled": "已取消登录",
+  "accountSignInTimeout": "等待验证超时，请重试",
+  "accountBrowserFailed": "打不开浏览器",
+  "accountUnsupportedPlatform": "网页版登录不了：Bangumi 的接口不返回 CORS 头，浏览器拿不到会话；它的 Turnstile 页面也禁止被内嵌。请用桌面端登录。",
+  "accountBadCredentials": "邮箱或密码不正确",
+  "accountRateLimited": "尝试次数过多，请稍后再试",
+  "accountNetworkFailed": "网络错误：{detail}",
+  "@accountNetworkFailed": {
+    "placeholders": {
+      "detail": { "type": "String" }
+    }
+  },
+  "accountSignedInAs": "已登录为 {nickname}",
+  "@accountSignedInAs": {
+    "placeholders": {
+      "nickname": { "type": "String" }
+    }
+  },
+  "accountSignedOut": "已退出登录",
+  "accountSignOut": "退出登录",
+  "accountUid": "UID {id}",
+  "@accountUid": {
+    "placeholders": {
+      "id": { "type": "String" }
+    }
+  },
+
   "proxyUnsupportedPlatform": "当前平台无法自动检测系统代理，将直连",
   "proxyPacScript": "检测到 PAC 自动配置脚本（{detail}），暂不支持，将直连",
   "@proxyPacScript": {
