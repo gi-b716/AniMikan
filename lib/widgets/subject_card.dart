@@ -100,7 +100,7 @@ class SubjectCard extends StatelessWidget {
                       if (subject.rating.rank > 0)
                         Text.rich(
                           TextSpan(
-                            text: 'Bangumi Rank  ',
+                            text: '${AppLocalizations.of(context).bangumiRank}  ',
                             style: text.labelSmall?.copyWith(
                               color: colors.outline,
                             ),

@@ -127,6 +127,9 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
+  String get bangumiRank => 'Bangumi 排名';
+
+  @override
   String get testPageTitle => 'GoRouter 导航示例';
 
   @override

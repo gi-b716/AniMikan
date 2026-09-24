@@ -36,6 +36,7 @@
   "score": "{score} pts",
   "detailDemoNote": "A generic detail page hosted by the root navigator: any list card can open it with context.push(AppRoute.subject(id), extra: subject).",
   "nRatings": "{count} rated",
+  "bangumiRank": "Bangumi Rank",
 
   "testPageTitle": "GoRouter navigation demo",
   "testPageBody": "Tapping any card pushes the same detail page. Switch tabs and come back: this page and every tab keep their state.",

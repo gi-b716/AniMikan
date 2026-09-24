@@ -75,6 +75,7 @@
       "count": { "type": "String" }
     }
   },
+  "bangumiRank": "Bangumi 排名",
 
   "testPageTitle": "GoRouter 导航示例",
   "testPageBody": "点击任意卡片会 push 同一个详情页；切换底部标签后再回来，测试页和各标签的状态会保留。",

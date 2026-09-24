@@ -128,6 +128,9 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get bangumiRank => 'Bangumi Rank';
+
+  @override
   String get testPageTitle => 'GoRouter navigation demo';
 
   @override

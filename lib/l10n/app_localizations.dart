@@ -290,6 +290,12 @@ abstract class AppLocalizations {
   /// **'{count}人'**
   String nRatings(String count);
 
+  /// No description provided for @bangumiRank.
+  ///
+  /// In zh, this message translates to:
+  /// **'Bangumi 排名'**
+  String get bangumiRank;
+
   /// No description provided for @testPageTitle.
   ///
   /// In zh, this message translates to:
