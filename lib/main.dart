@@ -9,7 +9,7 @@ import 'package:animikan/services/auth.dart';
 import 'package:animikan/settings/app.dart';
 import 'package:animikan/theme.dart';
 import 'package:animikan/utils/platform.dart';
-import 'package:animikan/utils/url_scheme/url_scheme.dart';
+import 'package:animikan/utils/url_scheme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

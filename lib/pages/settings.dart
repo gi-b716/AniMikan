@@ -1,11 +1,10 @@
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
 import 'package:animikan/l10n/app_localizations.dart';
 import 'package:animikan/l10n/labels.dart';
 import 'package:animikan/settings/app.dart';
 import 'package:animikan/utils/network/proxy.dart';
-import 'package:animikan/utils/restart/restart.dart';
+import 'package:animikan/utils/restart.dart';
 import 'package:animikan/widgets/app_shell.dart';
 import 'package:animikan/widgets/settings_list.dart';
 
@@ -43,38 +42,32 @@ class SettingsPage extends StatelessWidget {
                 ),
               ],
             ),
-            // The browser owns proxying: nothing set here could be applied, so
-            // the web build does not offer the setting at all.
-            if (!kIsWeb)
-              SettingsSection(
-                l.sectionNetwork,
-                children: [
-                  SettingsExpansionRow(
-                    icon: Icons.vpn_lock_outlined,
-                    title: l.proxyTitle,
-                    subtitle: _proxySummary(l, settings),
-                    children: const [_ProxyOptions()],
+            SettingsSection(
+              l.sectionNetwork,
+              children: [
+                SettingsExpansionRow(
+                  icon: Icons.vpn_lock_outlined,
+                  title: l.proxyTitle,
+                  subtitle: _proxySummary(l, settings),
+                  children: const [_ProxyOptions()],
+                ),
+              ],
+            ),
+            SettingsSection(
+              l.sectionDebug,
+              children: [
+                SettingsRow(
+                  icon: Icons.delete_forever_outlined,
+                  title: l.debugClearTitle,
+                  subtitle: l.debugClearSubtitle,
+                  trailing: TextButton(
+                    onPressed: () => _clearAllData(context),
+                    child: Text(l.debugClearAction),
                   ),
-                ],
-              ),
-            // Wiping data means starting the app over, which only means
-            // something where there is a process to restart.
-            if (!kIsWeb)
-              SettingsSection(
-                l.sectionDebug,
-                children: [
-                  SettingsRow(
-                    icon: Icons.delete_forever_outlined,
-                    title: l.debugClearTitle,
-                    subtitle: l.debugClearSubtitle,
-                    trailing: TextButton(
-                      onPressed: () => _clearAllData(context),
-                      child: Text(l.debugClearAction),
-                    ),
-                    onTap: () => _clearAllData(context),
-                  ),
-                ],
-              ),
+                  onTap: () => _clearAllData(context),
+                ),
+              ],
+            ),
           ],
         ),
       ),

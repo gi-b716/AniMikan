@@ -300,10 +300,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get accountBrowserFailed => 'Couldn\'t open a browser';
 
   @override
-  String get accountUnsupportedPlatform =>
-      'Signing in is not possible from a browser: Bangumi\'s API sends no CORS headers, so it can never hand out a session, and its Turnstile page refuses to be framed. Use the desktop app.';
-
-  @override
   String get accountBadCredentials => 'Wrong email or password';
 
   @override

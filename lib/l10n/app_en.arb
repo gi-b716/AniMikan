@@ -96,7 +96,6 @@
   "accountSignInCancelled": "Sign-in cancelled",
   "accountSignInTimeout": "Timed out waiting for the browser",
   "accountBrowserFailed": "Couldn't open a browser",
-  "accountUnsupportedPlatform": "Signing in is not possible from a browser: Bangumi's API sends no CORS headers, so it can never hand out a session, and its Turnstile page refuses to be framed. Use the desktop app.",
   "accountBadCredentials": "Wrong email or password",
   "accountRateLimited": "Too many attempts — try again later",
   "accountNetworkFailed": "Network error: {detail}",

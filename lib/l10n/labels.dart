@@ -66,7 +66,6 @@ String loginFailureText(AppLocalizations l, LoginException error) =>
       LoginFailure.cancelled => l.accountSignInCancelled,
       LoginFailure.timeout => l.accountSignInTimeout,
       LoginFailure.browser => l.accountBrowserFailed,
-      LoginFailure.unsupported => l.accountUnsupportedPlatform,
       LoginFailure.credentials => l.accountBadCredentials,
       LoginFailure.rateLimited => l.accountRateLimited,
       LoginFailure.network => l.accountNetworkFailed(error.detail ?? ''),

@@ -1,6 +1,5 @@
 import 'package:animikan/utils/network/proxy.dart';
-import 'package:animikan/utils/network/web.dart'
-    if (dart.library.io) 'package:animikan/utils/network/io.dart';
+import 'package:animikan/utils/network/io.dart';
 import 'package:dio/dio.dart';
 
 export 'package:animikan/utils/network/proxy.dart'
@@ -19,8 +18,6 @@ export 'package:animikan/utils/network/proxy.dart'
 /// // Anything that has to rebuild itself when this changes:
 /// Network.changes.listen(rebuild);
 /// ```
-///
-/// On the web there is nothing to configure.
 abstract final class Network {
   static ProxyConfig? get proxy => backend.proxy;
 

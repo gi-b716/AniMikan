@@ -140,7 +140,6 @@
   "accountSignInCancelled": "已取消登录",
   "accountSignInTimeout": "等待验证超时，请重试",
   "accountBrowserFailed": "打不开浏览器",
-  "accountUnsupportedPlatform": "网页版登录不了：Bangumi 的接口不返回 CORS 头，浏览器拿不到会话；它的 Turnstile 页面也禁止被内嵌。请用桌面端登录。",
   "accountBadCredentials": "邮箱或密码不正确",
   "accountRateLimited": "尝试次数过多，请稍后再试",
   "accountNetworkFailed": "网络错误：{detail}",

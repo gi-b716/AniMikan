@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -42,37 +41,11 @@ class AccountPage extends StatelessWidget {
   }
 
   Widget _content() {
-    if (kIsWeb) return const _Unavailable();
-
     return ValueListenableBuilder<AuthState>(
       valueListenable: BangumiAuth.instance,
       builder: (context, state, _) => state.isLoggedIn
           ? _AccountView(user: state.user)
           : const _SignInForm(),
-    );
-  }
-}
-
-class _Unavailable extends StatelessWidget {
-  const _Unavailable();
-
-  @override
-  Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
-    final ColorScheme colors = Theme.of(context).colorScheme;
-    final TextTheme text = Theme.of(context).textTheme;
-
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Text(l.accountSignInTitle, style: text.titleLarge),
-        const SizedBox(height: 12),
-        Text(
-          l.accountUnsupportedPlatform,
-          style: text.bodyMedium?.copyWith(color: colors.outline),
-        ),
-      ],
     );
   }
 }

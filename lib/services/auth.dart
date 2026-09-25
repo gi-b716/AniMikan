@@ -3,7 +3,6 @@ import 'dart:convert';
 
 import 'package:app_links/app_links.dart';
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -18,7 +17,6 @@ enum LoginFailure {
   cancelled,
   timeout,
   browser,
-  unsupported,
   credentials,
   rateLimited,
   network,
@@ -238,8 +236,6 @@ class BangumiAuth extends ValueNotifier<AuthState> {
   }
 
   Future<String> _solveTurnstile() async {
-    if (kIsWeb) throw const LoginException(LoginFailure.unsupported);
-
     final pending = _pendingTurnstile = Completer<String>();
     try {
       final bool opened;

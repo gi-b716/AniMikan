@@ -1,5 +1,4 @@
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 
 import 'package:animikan/config.dart';
 import 'package:animikan/models/calendar.dart';
@@ -38,7 +37,7 @@ class BangumiClient {
       receiveTimeout: const Duration(seconds: 15),
       headers: {
         'Accept': 'application/json',
-        if (!kIsWeb) 'User-Agent': BangumiConst.userAgent,
+        'User-Agent': BangumiConst.userAgent,
       },
     ),
   );

@@ -620,12 +620,6 @@ abstract class AppLocalizations {
   /// **'打不开浏览器'**
   String get accountBrowserFailed;
 
-  /// No description provided for @accountUnsupportedPlatform.
-  ///
-  /// In zh, this message translates to:
-  /// **'网页版登录不了：Bangumi 的接口不返回 CORS 头，浏览器拿不到会话；它的 Turnstile 页面也禁止被内嵌。请用桌面端登录。'**
-  String get accountUnsupportedPlatform;
-
   /// No description provided for @accountBadCredentials.
   ///
   /// In zh, this message translates to:

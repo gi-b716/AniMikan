@@ -294,10 +294,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get accountBrowserFailed => '打不开浏览器';
 
   @override
-  String get accountUnsupportedPlatform =>
-      '网页版登录不了：Bangumi 的接口不返回 CORS 头，浏览器拿不到会话；它的 Turnstile 页面也禁止被内嵌。请用桌面端登录。';
-
-  @override
   String get accountBadCredentials => '邮箱或密码不正确';
 
   @override
