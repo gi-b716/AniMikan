@@ -131,6 +131,100 @@ class AppLocalizationsEn extends AppLocalizations {
   String get bangumiRank => 'Bangumi Rank';
 
   @override
+  String get sectionSummary => 'Summary';
+
+  @override
+  String get sectionTags => 'Tags';
+
+  @override
+  String get sectionProduction => 'Production';
+
+  @override
+  String get sectionCollection => 'Collections';
+
+  @override
+  String get showMore => 'Show more';
+
+  @override
+  String get showLess => 'Show less';
+
+  @override
+  String get noSummary => 'No summary yet';
+
+  @override
+  String nEpisodes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count episodes',
+      one: '$count episode',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get actionWatch => 'Watch';
+
+  @override
+  String get actionSubscribe => 'Track';
+
+  @override
+  String get statCollected => 'Collected';
+
+  @override
+  String get sectionWorkInfo => 'Details';
+
+  @override
+  String get infoAirDate => 'Air date';
+
+  @override
+  String get infoEps => 'Episodes';
+
+  @override
+  String get infoAlias => 'Aliases';
+
+  @override
+  String get sectionEpisodes => 'Episodes';
+
+  @override
+  String get sectionCharacters => 'Characters';
+
+  @override
+  String get sectionRelations => 'Related';
+
+  @override
+  String get viewAll => 'View all';
+
+  @override
+  String get sectionRating => 'Rating';
+
+  @override
+  String get sectionStaff => 'Staff';
+
+  @override
+  String get comingSoon => 'Coming soon';
+
+  @override
+  String nRaters(String count) {
+    return '$count ratings';
+  }
+
+  @override
+  String epsTotal(int count) {
+    return '$count episodes total';
+  }
+
+  @override
+  String yearMonth(int year, int month) {
+    return '$month/$year';
+  }
+
+  @override
+  String pageRange(int from, int to, int total) {
+    return '$from – $to / $total';
+  }
+
+  @override
   String get testPageTitle => 'GoRouter navigation demo';
 
   @override

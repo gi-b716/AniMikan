@@ -130,6 +130,99 @@ class AppLocalizationsZh extends AppLocalizations {
   String get bangumiRank => 'Bangumi 排名';
 
   @override
+  String get sectionSummary => '简介';
+
+  @override
+  String get sectionTags => '标签';
+
+  @override
+  String get sectionProduction => '制作信息';
+
+  @override
+  String get sectionCollection => '收藏';
+
+  @override
+  String get showMore => '展开';
+
+  @override
+  String get showLess => '收起';
+
+  @override
+  String get noSummary => '暂无简介';
+
+  @override
+  String nEpisodes(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count 话',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get actionWatch => '开始观看';
+
+  @override
+  String get actionSubscribe => '追番';
+
+  @override
+  String get statCollected => '收藏';
+
+  @override
+  String get sectionWorkInfo => '作品信息';
+
+  @override
+  String get infoAirDate => '放送开始';
+
+  @override
+  String get infoEps => '话数';
+
+  @override
+  String get infoAlias => '别名';
+
+  @override
+  String get sectionEpisodes => '选集';
+
+  @override
+  String get sectionCharacters => '角色';
+
+  @override
+  String get sectionRelations => '关联条目';
+
+  @override
+  String get viewAll => '查看全部';
+
+  @override
+  String get sectionRating => '评分';
+
+  @override
+  String get sectionStaff => '制作人员';
+
+  @override
+  String get comingSoon => '暂未实现';
+
+  @override
+  String nRaters(String count) {
+    return '$count 人评分';
+  }
+
+  @override
+  String epsTotal(int count) {
+    return '全 $count 话';
+  }
+
+  @override
+  String yearMonth(int year, int month) {
+    return '$year 年 $month 月';
+  }
+
+  @override
+  String pageRange(int from, int to, int total) {
+    return '$from – $to / $total';
+  }
+
+  @override
   String get testPageTitle => 'GoRouter 导航示例';
 
   @override

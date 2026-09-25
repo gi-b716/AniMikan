@@ -296,6 +296,162 @@ abstract class AppLocalizations {
   /// **'Bangumi 排名'**
   String get bangumiRank;
 
+  /// No description provided for @sectionSummary.
+  ///
+  /// In zh, this message translates to:
+  /// **'简介'**
+  String get sectionSummary;
+
+  /// No description provided for @sectionTags.
+  ///
+  /// In zh, this message translates to:
+  /// **'标签'**
+  String get sectionTags;
+
+  /// No description provided for @sectionProduction.
+  ///
+  /// In zh, this message translates to:
+  /// **'制作信息'**
+  String get sectionProduction;
+
+  /// No description provided for @sectionCollection.
+  ///
+  /// In zh, this message translates to:
+  /// **'收藏'**
+  String get sectionCollection;
+
+  /// No description provided for @showMore.
+  ///
+  /// In zh, this message translates to:
+  /// **'展开'**
+  String get showMore;
+
+  /// No description provided for @showLess.
+  ///
+  /// In zh, this message translates to:
+  /// **'收起'**
+  String get showLess;
+
+  /// No description provided for @noSummary.
+  ///
+  /// In zh, this message translates to:
+  /// **'暂无简介'**
+  String get noSummary;
+
+  /// No description provided for @nEpisodes.
+  ///
+  /// In zh, this message translates to:
+  /// **'{count, plural, other{{count} 话}}'**
+  String nEpisodes(int count);
+
+  /// No description provided for @actionWatch.
+  ///
+  /// In zh, this message translates to:
+  /// **'开始观看'**
+  String get actionWatch;
+
+  /// No description provided for @actionSubscribe.
+  ///
+  /// In zh, this message translates to:
+  /// **'追番'**
+  String get actionSubscribe;
+
+  /// No description provided for @statCollected.
+  ///
+  /// In zh, this message translates to:
+  /// **'收藏'**
+  String get statCollected;
+
+  /// No description provided for @sectionWorkInfo.
+  ///
+  /// In zh, this message translates to:
+  /// **'作品信息'**
+  String get sectionWorkInfo;
+
+  /// No description provided for @infoAirDate.
+  ///
+  /// In zh, this message translates to:
+  /// **'放送开始'**
+  String get infoAirDate;
+
+  /// No description provided for @infoEps.
+  ///
+  /// In zh, this message translates to:
+  /// **'话数'**
+  String get infoEps;
+
+  /// No description provided for @infoAlias.
+  ///
+  /// In zh, this message translates to:
+  /// **'别名'**
+  String get infoAlias;
+
+  /// No description provided for @sectionEpisodes.
+  ///
+  /// In zh, this message translates to:
+  /// **'选集'**
+  String get sectionEpisodes;
+
+  /// No description provided for @sectionCharacters.
+  ///
+  /// In zh, this message translates to:
+  /// **'角色'**
+  String get sectionCharacters;
+
+  /// No description provided for @sectionRelations.
+  ///
+  /// In zh, this message translates to:
+  /// **'关联条目'**
+  String get sectionRelations;
+
+  /// No description provided for @viewAll.
+  ///
+  /// In zh, this message translates to:
+  /// **'查看全部'**
+  String get viewAll;
+
+  /// No description provided for @sectionRating.
+  ///
+  /// In zh, this message translates to:
+  /// **'评分'**
+  String get sectionRating;
+
+  /// No description provided for @sectionStaff.
+  ///
+  /// In zh, this message translates to:
+  /// **'制作人员'**
+  String get sectionStaff;
+
+  /// No description provided for @comingSoon.
+  ///
+  /// In zh, this message translates to:
+  /// **'暂未实现'**
+  String get comingSoon;
+
+  /// No description provided for @nRaters.
+  ///
+  /// In zh, this message translates to:
+  /// **'{count} 人评分'**
+  String nRaters(String count);
+
+  /// No description provided for @epsTotal.
+  ///
+  /// In zh, this message translates to:
+  /// **'全 {count} 话'**
+  String epsTotal(int count);
+
+  /// No description provided for @yearMonth.
+  ///
+  /// In zh, this message translates to:
+  /// **'{year} 年 {month} 月'**
+  String yearMonth(int year, int month);
+
+  /// No description provided for @pageRange.
+  ///
+  /// In zh, this message translates to:
+  /// **'{from} – {to} / {total}'**
+  String pageRange(int from, int to, int total);
+
   /// No description provided for @testPageTitle.
   ///
   /// In zh, this message translates to:

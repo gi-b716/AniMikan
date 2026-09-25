@@ -77,6 +77,62 @@
   },
   "bangumiRank": "Bangumi 排名",
 
+  "sectionSummary": "简介",
+  "sectionTags": "标签",
+  "sectionProduction": "制作信息",
+  "sectionCollection": "收藏",
+  "showMore": "展开",
+  "showLess": "收起",
+  "noSummary": "暂无简介",
+  "nEpisodes": "{count, plural, other{{count} 话}}",
+  "@nEpisodes": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+
+  "actionWatch": "开始观看",
+  "actionSubscribe": "追番",
+  "statCollected": "收藏",
+  "sectionWorkInfo": "作品信息",
+  "infoAirDate": "放送开始",
+  "infoEps": "话数",
+  "infoAlias": "别名",
+  "sectionEpisodes": "选集",
+  "sectionCharacters": "角色",
+  "sectionRelations": "关联条目",
+  "viewAll": "查看全部",
+  "sectionRating": "评分",
+  "sectionStaff": "制作人员",
+  "comingSoon": "暂未实现",
+  "nRaters": "{count} 人评分",
+  "@nRaters": {
+    "placeholders": {
+      "count": { "type": "String" }
+    }
+  },
+  "epsTotal": "全 {count} 话",
+  "@epsTotal": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "yearMonth": "{year} 年 {month} 月",
+  "@yearMonth": {
+    "placeholders": {
+      "year": { "type": "int" },
+      "month": { "type": "int" }
+    }
+  },
+  "pageRange": "{from} – {to} / {total}",
+  "@pageRange": {
+    "placeholders": {
+      "from": { "type": "int" },
+      "to": { "type": "int" },
+      "total": { "type": "int" }
+    }
+  },
+
   "testPageTitle": "GoRouter 导航示例",
   "testPageBody": "点击任意卡片会 push 同一个详情页；切换底部标签后再回来，测试页和各标签的状态会保留。",
   "openDetailPage": "打开详情页",

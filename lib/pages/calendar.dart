@@ -2,11 +2,13 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:intl/intl.dart';
 
 import 'package:animikan/l10n/app_localizations.dart';
 import 'package:animikan/models/calendar.dart';
+import 'package:animikan/router.dart';
 import 'package:animikan/widgets/app_shell.dart';
 import 'package:animikan/services/bangumi.dart';
 import 'package:animikan/widgets/subject_card.dart';
@@ -454,7 +456,10 @@ class _CalendarPageState extends State<CalendarPage> {
                   return SubjectCard(
                     subject: item.subject,
                     watchers: item.watchers,
-                    onTap: () {},
+                    onTap: () => context.push(
+                      AppRoute.subject(item.subject.id),
+                      extra: item.subject,
+                    ),
                   );
                 }, childCount: items.length),
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(

@@ -2,6 +2,8 @@ import 'package:dio/dio.dart';
 
 import 'package:animikan/config.dart';
 import 'package:animikan/models/calendar.dart';
+import 'package:animikan/models/subject.dart';
+import 'package:animikan/models/subject_extra.dart';
 import 'package:animikan/models/user.dart';
 import 'package:animikan/utils/network/network.dart';
 
@@ -48,6 +50,53 @@ class BangumiClient {
   Future<Calendar> getCalendar() => _guard(() async {
     final resp = await _dio.get('/p1/calendar');
     return Calendar.fromJson(resp.data as Map<String, dynamic>);
+  });
+
+  Future<Subject> getSubject(int id) => _guard(() async {
+    final resp = await _dio.get('/p1/subjects/$id');
+    return Subject.fromJson(resp.data as Map<String, dynamic>);
+  });
+
+  Future<Paged<Episode>> getSubjectEpisodes(
+    int id, {
+    int limit = 1000,
+    int offset = 0,
+  }) => _guard(() async {
+    final resp = await _dio.get(
+      '/p1/subjects/$id/episodes',
+      queryParameters: {'limit': limit, 'offset': offset},
+    );
+    return Paged.fromJson(resp.data as Map<String, dynamic>, Episode.fromJson);
+  });
+
+  Future<Paged<SubjectCharacter>> getSubjectCharacters(
+    int id, {
+    int limit = 100,
+    int offset = 0,
+  }) => _guard(() async {
+    final resp = await _dio.get(
+      '/p1/subjects/$id/characters',
+      queryParameters: {'limit': limit, 'offset': offset},
+    );
+    return Paged.fromJson(
+      resp.data as Map<String, dynamic>,
+      SubjectCharacter.fromJson,
+    );
+  });
+
+  Future<Paged<SubjectRelation>> getSubjectRelations(
+    int id, {
+    int limit = 100,
+    int offset = 0,
+  }) => _guard(() async {
+    final resp = await _dio.get(
+      '/p1/subjects/$id/relations',
+      queryParameters: {'limit': limit, 'offset': offset},
+    );
+    return Paged.fromJson(
+      resp.data as Map<String, dynamic>,
+      SubjectRelation.fromJson,
+    );
   });
 
   Future<({SlimUser user, String session})> login({
