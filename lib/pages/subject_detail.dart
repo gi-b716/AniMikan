@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -532,19 +533,15 @@ class _ImageBox extends StatelessWidget {
       child: Center(child: Icon(icon, color: colors.outline)),
     );
     if (url.isEmpty) return fallback(Icons.image_not_supported_outlined);
-    return Image.network(
-      url,
+    return CachedNetworkImage(
+      imageUrl: url,
       fit: BoxFit.cover,
       alignment: alignment,
-      errorBuilder: (_, _, _) => fallback(fallbackIcon),
-      loadingBuilder: (_, child, progress) => progress == null
-          ? child
-          : ColoredBox(
-              color: colors.surfaceContainerHigh,
-              child: const Center(
-                child: CircularProgressIndicator(strokeWidth: 2),
-              ),
-            ),
+      errorWidget: (_, _, _) => fallback(fallbackIcon),
+      placeholder: (_, _) => ColoredBox(
+        color: colors.surfaceContainerHigh,
+        child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+      ),
     );
   }
 }
@@ -564,10 +561,11 @@ class _Backdrop extends StatelessWidget {
         children: [
           ImageFiltered(
             imageFilter: ui.ImageFilter.blur(sigmaX: 28, sigmaY: 28),
-            child: Image.network(
-              url,
+            child: CachedNetworkImage(
+              imageUrl: url,
               fit: BoxFit.cover,
-              errorBuilder: (_, _, _) => ColoredBox(color: colors.surface),
+              errorWidget: (_, _, _) => ColoredBox(color: colors.surface),
+              placeholder: (_, _) => ColoredBox(color: colors.surface),
             ),
           ),
           DecoratedBox(

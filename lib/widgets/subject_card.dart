@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:ratings_plus/ratings_plus.dart';
@@ -200,21 +201,16 @@ class _CoverImage extends StatelessWidget {
       return errorImage;
     }
 
-    return Image.network(
-      url,
+    return CachedNetworkImage(
+      imageUrl: url,
       width: width,
       fit: BoxFit.cover,
-      errorBuilder: (_, _, _) => errorImage,
-      loadingBuilder: (_, child, progress) {
-        if (progress == null) {
-          return child;
-        }
-        return Container(
-          width: width,
-          color: Theme.of(context).colorScheme.surfaceContainerHigh,
-          child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
-        );
-      },
+      errorWidget: (_, _, _) => errorImage,
+      placeholder: (_, _) => Container(
+        width: width,
+        color: Theme.of(context).colorScheme.surfaceContainerHigh,
+        child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+      ),
     );
   }
 }

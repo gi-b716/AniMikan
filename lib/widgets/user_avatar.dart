@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
@@ -29,12 +30,11 @@ class UserAvatar extends StatelessWidget {
       ),
       child: url.isEmpty
           ? _placeholder(colors)
-          : Image.network(
-              url,
+          : CachedNetworkImage(
+              imageUrl: url,
               fit: BoxFit.cover,
-              errorBuilder: (_, _, _) => _placeholder(colors),
-              loadingBuilder: (_, child, progress) =>
-                  progress == null ? child : _placeholder(colors),
+              errorWidget: (_, _, _) => _placeholder(colors),
+              placeholder: (_, _) => _placeholder(colors),
             ),
     );
   }
